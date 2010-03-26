@@ -2,101 +2,8 @@
 # Ensure that ImageMagick is installed.
 package require Img
 
-# The Ace's screen size (256x192)
-set aceWidth 256
-set aceHeight 192
-
-proc scaleImage {filename percent} {
-	exec convert $filename -resize $percent% -type Grayscale -posterize 2 $filename
-}
-
-# Expand the image to the size of the Ace's screen size 
-proc expand2Ace {image {backgroundColour white}} {
-	global aceWidth
-	global aceHeight
-
-	set imageWidth [image width $image]
-	set imageHeight [image height $image]
-
-	if {$imageWidth < $aceWidth || $imageHeight < $aceHeight} {
-		set tempImage [image create photo -width $aceWidth -height $aceHeight]
-		
-		set xOffset [expr {int(floor(($aceWidth - $imageWidth)/2))}]
-		set yOffset [expr {int(floor(($aceHeight - $imageHeight)/2))}]
-
-		colourBackground $tempImage $backgroundColour
-		$tempImage copy $image -from 0 0 -to $xOffset $yOffset
-		$image blank 
-		$image copy $tempImage
-		image delete $tempImage
-	}	
-}
-
-
-proc colourBackground {image backgroundColour} {
-	global aceWidth
-	global aceHeight
-
-	if {$backgroundColour == "white"} {
-		set putColour #fff
-	} else {
-		set putColour #000
-	}
-
-	$image put $putColour -to 0 0 $aceWidth $aceHeight	
-}
-
-
-proc scalePercent {filename} {
-	global aceWidth
-	global aceHeight
-
-	set aceImage [image create photo  -file $filename]
-
-	set imageWidth [image width $aceImage]
-	set imageHeight [image height $aceImage]
-
-	set percent [expr {1.0 * $aceWidth / $imageWidth}]
-
-	if {[expr {$percent * $imageHeight}] > $aceHeight} {
-		set percent [expr {1.0 * $percent * ($aceHeight / ($imageHeight * $percent))}]
-	}
-
-
-	set percent [expr {$percent * 100}]
-	image delete $aceImage
-
-	return $percent
-}
-
-proc scale2Ace {filename} {
-	set percent [scalePercent $filename]
-	scaleImage $filename $percent	
-}
-
-proc getPixel {image x y} {
-	set colourList [$image get $x $y]
-
-	set blackList [list 255 255 255]
-
-	if {$colourList == $blackList} {
-		return 0
-	} else {
-		return 1
-	}
-}
-
-proc getBlock {image blockX blockY} {
-	for {set y 0} {$y < 8} {incr y} {
-		for {set x 0} {$x < 8} {incr x} {
-			lappend block [getPixel $image [expr {$blockX+$x}] [expr {$blockY+$y}]]
-		}
-	}
-
-	return $block
-}
-
 # Append a value to a list if the value doesn't already exist
+# TODO: May not need this
 proc lappendUnique {list value} {
 	upvar $list l
 
@@ -105,40 +12,328 @@ proc lappendUnique {list value} {
 	}
 }
 
-proc getAllBlocks {image} {
-	global aceWidth
-	global aceHeight
+# Count the number of unique elements in a list
+proc lcountUnique {aList} {
+	set count 0
 
-	for {set y 0} {$y < $aceHeight} {incr y 8} {
-		for {set x 0} {$x < $aceWidth} {incr x 8} {
-			lappendUnique blocks [getBlock $image $x $y]
+	foreach element $aList {
+		set indices [lsearch -all $aList $element]
+		if {[llength $indices] == 1} {
+			incr count
 		}
 	}
 
-	return $blocks
+	return $count
 }
 
 
-set filename martin_the_gorilla.jpg
-# TODO: Sort this out as it could overwrite a file that may be needed
-exec convert $filename tmp.$filename.png
+namespace eval acepix {
+	# The Ace's screen size (256x192)
+	variable aceWidth [expr {19*8}]
+	variable aceHeight [expr {14*8}]
+	variable tempFilename 
+	variable aceImage
 
-set filename "tmp.$filename.png"
-scale2Ace $filename
+	variable blocks
+	variable numBlocks [expr {19*14}]
+	variable blockDiameter 8
+	variable blockSize 64					;# The number of pixels in a block
 
-set aceImage [image create photo  -file $filename]
-expand2Ace $aceImage
+	namespace export add convert  
+	namespace ensemble create
 
-# Convert the image to black and white
-$aceImage configure -palette 2
+	proc convert {filename} {
+		variable tempFilename
+		variable aceImage
+		variable blocks
 
-$aceImage write test.png -format PNG
+		createTemporaryFile $filename
+		
+		scale2Ace
 
-set blocks [getAllBlocks $aceImage]
+		set aceImage [image create photo  -file $tempFilename]
+		expand2Ace 
 
-puts "blocks: $blocks"
+		getAllBlocks
 
-# TODO: Now need to find how many blocks are 1 pixel different from another, then 2 pixels, until we have a low enough number
+		puts "[lcountUnique $blocks] unique blocks."
 
-label .img -image $aceImage -anchor center
-grid .img
+
+	}
+	
+	proc createTemporaryFile {filename} {
+		variable tempFilename "tmp.$filename.png"
+		
+		# TODO: Sort this out as it could overwrite a file that may be needed
+		exec convert $filename $tempFilename
+
+	}
+
+
+	proc scaleImage {percent} {
+		variable tempFilename
+		exec convert $tempFilename -resize $percent% -type Grayscale -posterize 2 $tempFilename
+	}
+
+	# Expand the image to the size of the Ace's screen size 
+	proc expand2Ace {{backgroundColour white}} {
+		variable aceWidth
+		variable aceHeight
+		variable aceImage
+
+		set imageWidth [image width $aceImage]
+		set imageHeight [image height $aceImage]
+
+		if {$imageWidth < $aceWidth || $imageHeight < $aceHeight} {
+			set tempImage [image create photo -width $aceWidth -height $aceHeight]
+		
+			set xOffset [expr {int(floor(($aceWidth - $imageWidth)/2))}]
+			set yOffset [expr {int(floor(($aceHeight - $imageHeight)/2))}]
+
+			colourBackground $tempImage $backgroundColour
+			$tempImage copy $aceImage -from 0 0 -to $xOffset $yOffset
+			$aceImage copy $tempImage
+			image delete $tempImage
+		}	
+	}
+
+
+	proc colourBackground { image {backgroundColour white}} {
+		variable aceWidth
+		variable aceHeight
+		variable aceImage
+
+		if {$backgroundColour == "white"} {
+			set putColour #fff
+		} else {
+			set putColour #000
+		}
+
+		$image put $putColour -to 0 0 $aceWidth $aceHeight	
+	}
+
+	# Return the percent that the file needs scaling by
+	proc scalePercent {} {
+		variable aceWidth
+		variable aceHeight
+		variable tempFilename
+
+		set tempImage [image create photo  -file $tempFilename]
+
+		set imageWidth [image width $tempImage]
+		set imageHeight [image height $tempImage]
+
+		set percent [expr {1.0 * $aceWidth / $imageWidth}]
+
+		if {[expr {$percent * $imageHeight}] > $aceHeight} {
+			set percent [expr {1.0 * $percent * ($aceHeight / ($imageHeight * $percent))}]
+		}
+
+		set percent [expr {$percent * 100}]
+		image delete $tempImage
+
+		return $percent
+	}
+
+	proc scale2Ace {} {
+		scaleImage [scalePercent]	
+	}
+
+	proc getPixel {x y} {
+		variable aceImage
+		set colourList [$aceImage get $x $y]
+	
+		set blackList [list 255 255 255]
+	
+		if {$colourList == $blackList} {
+			return 0
+		} else {
+			return 1
+		}
+	}
+
+	proc getBlock {blockX blockY} {
+		variable blockDiameter
+		for {set y 0} {$y < $blockDiameter} {incr y} {
+			for {set x 0} {$x < $blockDiameter} {incr x} {
+				lappend block [getPixel [expr {$blockX+$x}] [expr {$blockY+$y}]]
+			}
+		}
+	
+		return $block
+	}
+
+	proc blockDifference3 {block1 block2} {
+		variable blockSize
+
+		set difference 0
+
+		for {set i 0} {$i <	$blockSize} {incr i} {
+			if {[lindex $block1 $i] != [lindex $block2 $i]} {
+				incr difference
+			}
+		}
+
+		return $difference
+	}
+
+
+	proc blockDifference2 {block1 block2} {
+		variable blockSize
+
+		set block1Count	0
+		for {set i 0} {$i <	$blockSize} {incr i} {
+			if {[lindex $block1 $i] == 1} {
+				incr block1Count 
+			}
+		}
+
+		set block2Count	0
+		for {set i 0} {$i <	$blockSize} {incr i} {
+			if {[lindex $block2 $i] == 1} {
+				incr block2Count 
+			}
+		}
+		return [expr {abs($block1Count-$block2Count)}] 
+	}
+	
+	# Count the number of pixel on in each quarter
+	proc blockQuarter {block quarter} {
+		switch $quarter {
+			0	{	set startY 0
+					set endY 3
+					set startX 0
+					set endX 3
+				}
+				
+			1	{	set startY 0
+					set endY 3
+					set startX 4
+					set endX 7
+				}
+				
+			2	{	set startY 4
+					set endY 7
+					set startX 0
+					set endX 3
+				}
+				
+			3	{	set startY 4
+					set endY 7
+					set startX 4
+					set endX 7
+				}
+		}	
+		
+		set count 0
+		for {set y $startY} {$y <= $endY} {incr y} {
+			for {set x $startX} {$x <= $endX} {incr x} {
+				set i [expr {$y*8 + $x}]
+				if {[lindex $block $i] == 1} {
+					incr count
+				}
+			}	
+		}
+		
+		return $count
+	}				
+	
+	# Check the difference in the number of pixels in each quarter
+	proc blockDifference {block1 block2} {
+		
+		set block1List [list [blockQuarter $block1 0] [blockQuarter $block1 1] [blockQuarter $block1 2] [blockQuarter $block1 3]]
+		set block2List [list [blockQuarter $block2 0] [blockQuarter $block2 1] [blockQuarter $block2 2] [blockQuarter $block2 3]]
+			
+			
+		set difference 0		
+		for {set i 0} {$i < 4} {incr i} {
+			if {[lindex $block1List $i] != [lindex $block2List $i]} {
+				incr difference
+			}
+		}
+		
+		return $difference
+	}
+
+	proc getAllBlocks {} {
+		variable aceWidth
+		variable aceHeight
+		variable blocks
+		variable blockDiameter
+
+		for {set y 0} {$y < $aceHeight} {incr y $blockDiameter} {
+			for {set x 0} {$x < $aceWidth} {incr x $blockDiameter} {
+				lappend blocks [getBlock $x $y]
+			}
+		}
+	}
+	
+	# Returns the index to the first block with the specified difference from the block passed. 
+	# If it can't find a block then it returns -1
+	# TODO: Improve this so that it tries to find a block near the centre of the picture
+	proc findBlock {block difference} {
+		variable blocks
+		for {set i 0} {$i < [llength $blocks] && [blockDifference [lindex $blocks $i] $block] != $difference} {incr i} {
+		}
+
+		if {[blockDifference [lindex $blocks $i] $block] == $difference} {
+			return $i
+		} else {
+			return -1
+		}
+	}
+
+	proc reduceNumBlocks {} {
+		variable blocks
+
+		for {set differenceCheck 1} {[lcountUnique $blocks] > 128} {incr differenceCheck} {
+			for {set i 0} {$i < [llength $blocks]  && [lcountUnique $blocks] > 128 } {incr i} {
+if {[expr {$i % 100}] == 0} {puts "i: $i"}
+				set copyBlockIndex [findBlock [lindex $blocks $i] $differenceCheck]
+
+				if {$copyBlockIndex != -1} {
+					set blocks [lreplace $blocks $i $i [lindex $blocks $copyBlockIndex]]
+				}
+			}
+
+			puts "reduce - differenceCheck: $differenceCheck unique blocks: [lcountUnique $blocks] "
+		}	
+	}
+
+	proc displayBlocks {} {
+		variable aceWidth
+		variable aceHeight
+		variable aceImage
+		variable blocks
+		variable numBlocks
+
+		for {set b 0} {$b <	$numBlocks} {incr b} {
+			set i 0
+			for {set y [expr {$b / 19} * 8]} {$y < [expr {$b / 19 * 8 + 8}]} {incr y} {
+				for {set x [expr {$b % 19 * 8}]} {$x < [expr {$b % 19 * 8 + 8}]} {incr x} {
+					set block [lindex $blocks $b]
+					if {[lindex $block $i] == 1} {
+						set colour #000 
+					} else {
+						set colour #fff 
+					}
+
+					$aceImage put $colour -to $x $y
+
+					incr i
+				}
+			}
+		}
+			
+	}
+}
+
+
+acepix convert martin_the_gorilla.jpg
+
+ttk::button .reduce -text Reduce -command ::acepix::reduceNumBlocks
+ttk::button .refresh -text Refresh -command ::acepix::displayBlocks
+ttk::button .save -text Save -command {$::acepix::aceImage write $::acepix::tempFilename -format PNG}
+label .img -image $::acepix::aceImage
+grid .reduce .refresh .save .img	
+
