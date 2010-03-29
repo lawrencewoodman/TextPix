@@ -7,7 +7,7 @@ package require Img
 proc lappendUnique {list value} {
 	upvar $list l
 
-	if {![info exists l] || [lsearch $l $value] < 0} {
+	if {![info exists l] || [lsearch -exact $l $value] < 0} {
 		lappend l $value
 	}
 }
@@ -29,15 +29,17 @@ proc lcountUnique {aList} {
 
 namespace eval acepix {
 	# The Ace's screen size (256x192)
-	variable aceWidth [expr {19*8}]
-	variable aceHeight [expr {14*8}]
+	variable aceWidth 256
+	variable aceHeight 192
 	variable tempFilename 
 	variable aceImage
 
 	variable blocks
-	variable numBlocks [expr {19*14}]
+	variable numBlocks 768
 	variable blockDiameter 8
 	variable blockSize 64					;# The number of pixels in a block
+
+	variable charSet
 
 	namespace export add convert  
 	namespace ensemble create
@@ -163,7 +165,7 @@ namespace eval acepix {
 		return $block
 	}
 
-	proc blockDifference3 {block1 block2} {
+	proc blockPixelDifference {block1 block2} {
 		variable blockSize
 
 		set difference 0
@@ -178,26 +180,7 @@ namespace eval acepix {
 	}
 
 
-	proc blockDifference2 {block1 block2} {
-		variable blockSize
-
-		set block1Count	0
-		for {set i 0} {$i <	$blockSize} {incr i} {
-			if {[lindex $block1 $i] == 1} {
-				incr block1Count 
-			}
-		}
-
-		set block2Count	0
-		for {set i 0} {$i <	$blockSize} {incr i} {
-			if {[lindex $block2 $i] == 1} {
-				incr block2Count 
-			}
-		}
-		return [expr {abs($block1Count-$block2Count)}] 
-	}
-	
-	# Count the number of pixel on in each quarter
+	# Count the number of black pixels in each quarter
 	proc blockQuarter {block quarter} {
 		switch $quarter {
 			0	{	set startY 0
@@ -239,7 +222,7 @@ namespace eval acepix {
 	}				
 	
 	# Check the difference in the number of pixels in each quarter
-	proc blockDifference {block1 block2} {
+	proc blockQuarterDifference {block1 block2} {
 		
 		set block1List [list [blockQuarter $block1 0] [blockQuarter $block1 1] [blockQuarter $block1 2] [blockQuarter $block1 3]]
 		set block2List [list [blockQuarter $block2 0] [blockQuarter $block2 1] [blockQuarter $block2 2] [blockQuarter $block2 3]]
@@ -268,31 +251,119 @@ namespace eval acepix {
 		}
 	}
 	
-	# Returns the index to the first block with the specified difference from the block passed. 
+	# Returns the index to the nearest block with the specified difference from the block passed. 
 	# If it can't find a block then it returns -1
 	# TODO: Improve this so that it tries to find a block near the centre of the picture
-	proc findBlock {block difference} {
+	proc findSimilarBlock {block quarterDifference} {
 		variable blocks
-		for {set i 0} {$i < [llength $blocks] && [blockDifference [lindex $blocks $i] $block] != $difference} {incr i} {
+		variable blockSize
+
+		# Find all the blocks with the given difference
+		for {set i 0} {$i < [llength $blocks]} {incr i} {
+			if {[blockQuarterDifference [lindex $blocks $i] $block] == $quarterDifference} {
+				lappend foundBlocks $i
+			}
 		}
 
-		if {[blockDifference [lindex $blocks $i] $block] == $difference} {
-			return $i
-		} else {
+		if {![info exists foundBlocks]} {
 			return -1
+		}
+
+		set lowestPixelDifference $blockSize
+		set nearestBlock [lindex $foundBlocks 0]
+
+		return [lindex $foundBlocks 0]
+
+		# Find the nearest block in terms of matching pixels
+		for {set i 0} {$i < [llength $foundBlocks]} {incr i} {
+			set tempPixelDifference [blockPixelDifference [lindex $blocks [lindex $foundBlocks $i]] $block] 
+			if {$tempPixelDifference < $lowestPixelDifference} {
+				set lowestPixelDifference $tempPixelDifference
+				set nearestBlock [lindex $foundBlocks $i]
+			}
+		}
+
+		return $nearestBlock
+	}
+
+	proc getInverseBlock {block} {
+		
+		foreach element $block {
+			if {$element == 0} {
+				lappend returnBlock 1
+			}
+				lappend returnBlock 0
+			}
+
+		return $returnBlock
+	}
+
+
+	# Searches $charSet to see if an inverse block exists
+	proc inverseBlockExists {block} {
+		variable charSet
+	
+		if {[lsearch -exact -sorted $charSet [getInverseBlock $block]] >= 0} {
+			return true
+		} else {
+			return false
+		}
+
+	}
+
+	proc createInitialCharSet {} {
+		variable blocks
+		variable charSet
+
+		# Create a list of the unique blocks
+		foreach block $blocks {
+			lappendUnique charSet $block
+		}
+
+		set charSet [lsort $charSet]
+	}
+
+	proc numberInCharSet {} {
+		variable charSet
+
+		set inverseBlocks 0
+		foreach block $charSet {
+			if {[inverseBlockExists $block]} {
+				incr inverseBlocks
+			}
+		}	
+
+		set numberBlocks [expr {[llength $charSet]	- ($inverseBlocks/2)}]
+
+		return $numberBlocks
+
+	}
+
+	proc removeCharSetBlock {block} {
+		variable charSet
+
+		set charSetIndex [lsearch -exact -sorted $charSet $block]
+		if {$charSetIndex != -1 } {
+			set charSet [lreplace $charSet $charSetIndex $charSetIndex]
 		}
 	}
 
 	proc reduceNumBlocks {} {
 		variable blocks
+		variable charSet
 
-		for {set differenceCheck 1} {[lcountUnique $blocks] > 128} {incr differenceCheck} {
-			for {set i 0} {$i < [llength $blocks]  && [lcountUnique $blocks] > 128 } {incr i} {
+		createInitialCharSet
+
+		set charSetSize [numberInCharSet]
+		for {set differenceCheck 1} {$charSetSize > 128} {incr differenceCheck} {
+			for {set i 0} {$i < [llength $blocks]  && $charSetSize > 128 } {incr i} {
 if {[expr {$i % 100}] == 0} {puts "i: $i"}
-				set copyBlockIndex [findBlock [lindex $blocks $i] $differenceCheck]
+				set copyBlockIndex [findSimilarBlock [lindex $blocks $i] $differenceCheck]
 
 				if {$copyBlockIndex != -1} {
+					removeCharSetBlock [lindex $blocks $i]
 					set blocks [lreplace $blocks $i $i [lindex $blocks $copyBlockIndex]]
+					set charSetSize [numberInCharSet]
 				}
 			}
 
@@ -309,8 +380,8 @@ if {[expr {$i % 100}] == 0} {puts "i: $i"}
 
 		for {set b 0} {$b <	$numBlocks} {incr b} {
 			set i 0
-			for {set y [expr {$b / 19} * 8]} {$y < [expr {$b / 19 * 8 + 8}]} {incr y} {
-				for {set x [expr {$b % 19 * 8}]} {$x < [expr {$b % 19 * 8 + 8}]} {incr x} {
+			for {set y [expr {$b / 32} * 8]} {$y < [expr {$b / 32 * 8 + 8}]} {incr y} {
+				for {set x [expr {$b % 32 * 8}]} {$x < [expr {$b % 32 * 8 + 8}]} {incr x} {
 					set block [lindex $blocks $b]
 					if {[lindex $block $i] == 1} {
 						set colour #000 
