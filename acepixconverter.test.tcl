@@ -7,6 +7,17 @@
 #############################################################
 source acepixconverter.tcl
 
+proc test_lcountUnique {} {
+	puts -nonewline "test_lcountUnique()  - "
+	
+	if {[lcountUnique [list 9 48 845 284 245 12 9 48 32 48 12 4 6 ]] != 9} {
+		puts "Failed."
+		exit
+	}
+	
+	puts "Passed."
+}
+
 
 proc test_getInverseBlock {} {
 	puts -nonewline "test_getInverseBlock() - "
@@ -136,9 +147,12 @@ proc test_replaceBlocks {} {
 }
 
 
+
+
 ########################################################
 #                    Run the tests
 ########################################################
+test_lcountUnique
 test_inverseCharExists
 test_getInverseBlock
 test_calculateCharSetSize

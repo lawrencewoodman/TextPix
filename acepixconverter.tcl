@@ -24,14 +24,15 @@ proc lappendUnique {list value} {
 proc lcountUnique {aList} {
 	set count 0
 
+	set uniqueList [list]
+	
 	foreach element $aList {
-		set indices [lsearch -all $aList $element]
-		if {[llength $indices] == 1} {
-			incr count
-		}
+		lappendUnique uniqueList $element
 	}
 
-	return $count
+	
+
+	return [llength $uniqueList]
 }
 
 
@@ -185,42 +186,6 @@ namespace eval AcePixConverter {
 		return $difference
 	}
 
-	
-	# Returns the index to the nearest block with the specified difference from the block passed. 
-	# If it can't find a block then it returns -1
-	# TODO: Improve this so that it tries to find a block near the centre of the picture
-	proc findSimilarBlock2 {char quarterDifference} {
-		variable charSet 
-		variable blockSize
-
-		# Find all the blocks with the given difference
-		for {set i 0} {$i < [llength $charSet]} {incr i} {
-			if {[blockQuarterDifference [lindex $charSet $i] $char] == $quarterDifference} {
-				lappend foundChars $i
-			}
-		}
-
-		if {![info exists foundChars]} {
-			return -1
-		}
-
-		set lowestPixelDifference $blockSize
-		set nearestChar [lindex $foundChars 0]
-
-		# TODO: Remove this line 
-		#return $nearestChar 
-
-		# Find the nearest block in terms of matching pixels
-		for {set i 0} {$i < [llength $foundChars]} {incr i} {
-			set tempPixelDifference [blockPixelDifference [lindex $char [lindex $foundChars $i]] $char] 
-			if {$tempPixelDifference < $lowestPixelDifference} {
-				set lowestPixelDifference $tempPixelDifference
-				set nearestChar [lindex $foundChars $i]
-			}
-		}
-
-		return $nearestChar
-	}
 	
 	# Returns the index to the nearest block with the specified difference from the block passed. 
 	# If it can't find a block then it returns -1
@@ -403,6 +368,7 @@ namespace eval AcePixConverter {
 		
 		set oldBlockIndices [lsearch -all -exact $blocks $oldBlock]
 		
+	
 		foreach blockIndex $oldBlockIndices {
 			set blocks [lreplace $blocks $blockIndex $blockIndex $newBlock]  
 		}
@@ -426,14 +392,16 @@ namespace eval AcePixConverter {
 				set copyCharIndex [findSimilarBlock $currentBlock $differenceCheck]
 
 				if {$copyCharIndex != -1} {
+				
 					set copyChar [lindex $charSet $copyCharIndex]
 					removeCharSetChar $currentBlock
 					replaceBlocks $currentBlock $copyChar
+					
 				}
 			}
 
-			puts "reduce - differenceCheck: $differenceCheck unique blocks: [lcountUnique $blocks] "
-			puts "unique chars [lcountUnique $charSet]"
+			puts -nonewline "AFTER: reduce - differenceCheck: $differenceCheck unique blocks: [lcountUnique $blocks] "
+			puts "unique chars [lcountUnique $charSet]  charSetSize: $charSetSize"
 		}	
 	}
 
