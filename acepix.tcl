@@ -23,7 +23,7 @@ proc saveByteFile {} {
 }
 
 proc savePNGfile {} {
-	$::AcePixConverter::aceImage write $::acePixConverter::tempFilename -format PNG
+	$::AcePixConverter::aceImage write $::AcePixConverter::tempFilename -format PNG
 }
 
 

@@ -95,7 +95,7 @@ namespace eval AcePixConverter {
 		return $block
 	}
 
-	proc blockPixelDifference2 {block1 block2} {
+	proc blockPixelMatchingDifference {block1 block2} {
 		variable blockSize
 
 		set difference 0
@@ -241,24 +241,30 @@ namespace eval AcePixConverter {
 		}
 
 		set lowestPixelCountDifference $blockSize
-		set nearestChar [lindex $foundChars 0]
 
-		# Find the nearest block in terms of pixel count
-#		for {set i 0} {$i < [llength $foundChars]} {incr i} {
-			#set tempPixelCountDifference [blockPixelCountDifference [lindex $char [lindex $foundChars $i]] $char] 
-			#if {$tempPixelCountDifference < $lowestPixelCountDifference} {
-				#set lowestPixelCountDifference $tempPixelCountDifference
-				#set nearestChar [lindex $foundChars $i]
-			#}
-		#}
-		
+		# Find the nearest chars in terms of pixel count
 		foreach fChar $foundChars {
-			set tempPixelCountDifference [blockPixelCountDifference [lindex $char $fChar] $char] 
-			if {$tempPixelCountDifference < $lowestPixelCountDifference} {
+			set tempPixelCountDifference [blockPixelCountDifference [lindex $char $fChar] $char]
+			if {$tempPixelCountDifference == $lowestPixelCountDifference} {
+				lappend nearestPixelCountChars $fChar
+			} elseif {$tempPixelCountDifference < $lowestPixelCountDifference} {
 				set lowestPixelCountDifference $tempPixelCountDifference
-				set nearestChar $fChar
+				set nearestPixelCountChars [list $fChar]
 			}
 		}
+		
+		set lowestPixelMatchingDifference $blockSize
+		set nearestChar [lindex $nearestPixelCountChars 0]
+
+		# Find the nearest block in terms of matching pixels
+		foreach nChar $nearestPixelCountChars {
+			set tempPixelMatchingDifference [blockPixelMatchingDifference [lindex $char $nChar] $char] 
+			if {$tempPixelMatchingDifference < $lowestPixelMatchingDifference} {
+				set lowestPixelDifference $tempPixelMatchingDifference
+				set nearestChar $nChar
+			}
+		}
+		
 		
 
 		return $nearestChar
