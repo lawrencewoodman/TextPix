@@ -10,6 +10,9 @@
 # Requires:
 # * For debian make sure that libtk-img package is present.
 # * ImageMagick must be installed.#
+#------------------------------------------------------------
+# TODO:
+# * Consider upping the contrast before converting the image.
 #############################################################
 package require Img
 

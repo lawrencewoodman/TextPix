@@ -28,7 +28,8 @@ proc savePNGfile {} {
 
 
 #set filename martin_the_gorilla.jpg
-set filename isaac2.jpg
+set filename isaac2.jpg		;# Note the white background on this
+#set filename isaac.jpg
 
 ::AcePixConverter::convertToBlocks $filename
 
