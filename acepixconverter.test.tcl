@@ -54,28 +54,10 @@ proc test_inverseCharExists {} {
 
 
 
-proc test_calculateCharSetSize {} {
-	puts -nonewline "test_calculateCharSetSize() - "
-	
-	set ::AcePixConverter::charSet [lsort [list {0 0 1 1} {1 1 0 0} {0 1 1 0}]]
-
-	::AcePixConverter::calculateCharSetSize
-
-	if {$::AcePixConverter::charSetSize != 2} {
-		puts "Failed."
-		exit
-	}
-	
-	
-	puts "Passed."
-}
-
-
-
 proc test_removeCharSetChar {} {
 	puts -nonewline "test_removeCharSetChar()  - "
-	set ::AcePixConverter::charSet [lsort [list {0 0 1 1} {1 1 0 0} {0 1 1 0}]]
-		set ::AcePixConverter::charSetSize 3
+	set ::AcePixConverter::charSet [lsort [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {1 0 0 1}]]
+	set ::AcePixConverter::charSetSize 4
 	
 	
 	# Test removing a char that exists
@@ -86,25 +68,36 @@ proc test_removeCharSetChar {} {
 		exit
 	}
 	
-	if {$::AcePixConverter::charSet != [list {0 0 1 1} {0 1 1 0}]} {
+	if {$::AcePixConverter::charSet != [list {0 1 1 0} {1 0 0 1}]} {
 		puts "Failed."
 		exit
 	}
 	
 	# Test removing a char that doesn't exist
-	::AcePixConverter::removeCharSetChar [list {1 0 0 1}]
+	::AcePixConverter::removeCharSetChar [list 0 0 0 1]
 	
 	if {$::AcePixConverter::charSetSize != 2} {
 		puts "Failed."
 		exit
 	}
 	
-	if {$::AcePixConverter::charSet != [list {0 0 1 1} {0 1 1 0}]} {
+	if {$::AcePixConverter::charSet != [list {0 1 1 0} {1 0 0 1}]} {
 		puts "Failed."
 		exit
 	}
 
 	
+	# Test removing a char but not its inverse 
+	::AcePixConverter::removeCharSetChar [list 1 0 0 1] false
+	
+	if {$::AcePixConverter::charSetSize != 1} {
+		puts "Failed."
+		exit
+	}
+	
+	if {$::AcePixConverter::charSet != [list {0 1 1 0} ]} {
+		puts "Failed."
+	}
 	
 	puts "Passed."
 }
@@ -118,12 +111,12 @@ proc test_createInitialCharSet {} {
 	
 	
 	
-	if {$::AcePixConverter::charSetSize != 3} {
+	if {$::AcePixConverter::charSetSize != 6} {
 		puts "Failed."
 		exit
 	}
-	
-	if {$::AcePixConverter::charSet != [list {0 0 1 1} {0 1 1 0} {1 0 0 1} {1 1 0 0} {1 1 1 1}]} {
+
+	if {$::AcePixConverter::charSet != [list {0 0 0 0} {0 0 1 1} {0 1 1 0} {1 0 0 1} {1 1 0 0} {1 1 1 1} ]} {
 		puts "Failed."
 		exit
 	}
@@ -138,11 +131,41 @@ proc test_replaceBlocks {} {
 		
 	::AcePixConverter::replaceBlocks [list 0 1 1 0] [list 0 1 1 1]
 
-	if {$::AcePixConverter::blocks != [list {0 0 1 1} {1 1 0 0} {0 1 1 1} {0 0 1 1} {1 0 0 1} {0 1 1 1} {0 0 1 1} {1 1 1 1}]} {
+	if {$::AcePixConverter::blocks != [list {0 0 1 1} {1 1 0 0} {0 1 1 1} {0 0 1 1} {1 0 0 0} {0 1 1 1} {0 0 1 1} {1 1 1 1}]} {
 		puts "Failed."
 		exit
 	}
 	
+	puts "Passed."
+}
+
+
+proc test_finalizeCharSet {} {
+	puts -nonewline "test_finalizeCharSet()  - "
+	
+	set ::AcePixConverter::blocks [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {0 0 1 1} {1 0 0 1} {0 1 1 0} {0 0 1 1} {1 1 1 1}]
+	::AcePixConverter::createInitialCharSet
+	
+	::AcePixConverter::finalizeCharSet
+	
+	if {[llength $::AcePixConverter::charSet] != 6} {
+		puts "Failed."
+		exit
+	}
+
+	if {$::AcePixConverter::charSetSize != 6} {
+		puts "Failed."
+		exit
+	}
+
+	for {set i 0} {$i < [expr {$::AcePixConverter::charSetSize/2}]} {incr i} {
+		if {[lindex $::AcePixConverter::charSet $i] != [::AcePixConverter::getInverseBlock [lindex $::AcePixConverter::charSet [expr {$i + 3}]]]} {
+			puts "Failed."
+			exit
+		}
+	}
+
+
 	puts "Passed."
 }
 
@@ -152,12 +175,13 @@ proc test_replaceBlocks {} {
 ########################################################
 #                    Run the tests
 ########################################################
+test_createInitialCharSet
+test_removeCharSetChar
+
 test_lcountUnique
 test_inverseCharExists
 test_getInverseBlock
-test_calculateCharSetSize
-test_removeCharSetChar
-test_createInitialCharSet
 test_replaceBlocks
 
+test_finalizeCharSet			
 exit

@@ -27,7 +27,10 @@ proc savePNGfile {} {
 }
 
 
-::AcePixConverter::convertToBlocks martin_the_gorilla.jpg
+#set filename martin_the_gorilla.jpg
+set filename isaac2.jpg
+
+::AcePixConverter::convertToBlocks $filename
 
 ttk::button .reduce -text Reduce -command ::AcePixConverter::reduceNumBlocks
 ttk::button .refresh -text Refresh -command ::AcePixConverter::displayBlocks

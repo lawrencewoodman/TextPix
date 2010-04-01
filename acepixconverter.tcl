@@ -264,51 +264,60 @@ namespace eval AcePixConverter {
 	proc createInitialCharSet {} {
 		variable blocks
 		variable charSet
+		variable charSetSize
 
 		# Create a list of the unique blocks
 		foreach char $blocks {
 			lappendUnique charSet $char
 		}
+		
+		# Put inverse characters of the charset at the end
+		foreach char $charSet {
+			lappendUnique charSet [getInverseBlock $char]
+		}
+
 
 		set charSet [lsort $charSet]
-		calculateCharSetSize
+		set charSetSize [expr {[llength $charSet]}]
 
 	}
 
-	proc removeCharSetChar {char} {
+	# TODO: Change this so that it uses a flag at the beginning to indicate not to remove the inverse
+	proc removeCharSetChar {char {removeInverse true}} {
 		variable charSet
+		variable charSetSize
 
 		set charSetIndex [lsearch -exact -sorted $charSet $char]
 		
 		if {$charSetIndex != -1 } {
 			set charSet [lreplace $charSet $charSetIndex $charSetIndex]
-			calculateCharSetSize
+			incr charSetSize -1
 		}
+
+		if {$removeInverse} {
+			set inverseChar [getInverseBlock $char]		
+			set inverseCharSetIndex [lsearch -exact -sorted $charSet $inverseChar]
+		
+			if {$inverseCharSetIndex != -1 } {
+				set charSet [lreplace $charSet $inverseCharSetIndex $inverseCharSetIndex]
+				incr charSetSize -1
+			}
+		}
+		
 	}
 
-	proc calculateCharSetSize {} {
+	# Get the charset into a state where it can be exported to a data file ready to be loaded by the ace
+	# TODO: Probably get rid of this as I can see no reason for it anymore
+	proc finalizeCharSet {} {
 		variable charSet
 		variable charSetSize
 
-		set inverseChars 0
-		foreach char $charSet {
-			if {[inverseCharExists $char]} {
-				incr inverseChars
-			}
-		}	
-
-		set charSetSize [expr {[llength $charSet]	- ($inverseChars/2)}]
-	}
-
-
-	# Get the charset into a state where it can be exported to a data file ready to be loaded by the ace
-	proc finalizeCharSet {} {
-		variable charSet
+		set oldCharSetSize $charSetSize
 	
 		# Remove any inverse characters
-		for {set i 0} {$i < [llength $charSet]} {incr i} {
-			if {[inverseCharExists [lindex $charSet $i]]} {
-				removeCharSetChar [lindex $charSet $i]
+		foreach char $charSet {
+			if {[inverseCharExists $char]} {
+				removeCharSetChar $char false
 			}
 		}
 
@@ -317,6 +326,7 @@ namespace eval AcePixConverter {
 			lappend	charSet [getInverseBlock $char]
 		}
 		
+		set charSetSize $oldCharSetSize
 	}
 
 	proc getScreenData {} {
@@ -353,7 +363,7 @@ namespace eval AcePixConverter {
 				if {$column == 0} {
 					set bLine 0
 				}
-				set bLine [expr {$bLine | int(pow(2, $column) * $pixel)}]
+				set bLine [expr {$bLine | int(pow(2, (7-$column)) * $pixel)}]
 
 				if {$column == 7} {
 					lappend charSetData $bLine
@@ -367,11 +377,21 @@ namespace eval AcePixConverter {
 		variable blocks
 		
 		set oldBlockIndices [lsearch -all -exact $blocks $oldBlock]
-		
 	
 		foreach blockIndex $oldBlockIndices {
 			set blocks [lreplace $blocks $blockIndex $blockIndex $newBlock]  
 		}
+		
+		# Replace the inverse of this block as well
+		set inverseOldBlock [getInverseBlock $oldBlock]
+		set inverseNewBlock [getInverseBlock $newBlock]
+		
+		set inverseOldBlockIndices [lsearch -all -exact $blocks $inverseOldBlock]
+	
+		foreach inverseBlockIndex $inverseOldBlockIndices {
+			set blocks [lreplace $blocks $inverseBlockIndex $inverseBlockIndex $inverseNewBlock]  
+		}
+
 	
 	}
 
@@ -382,8 +402,8 @@ namespace eval AcePixConverter {
 
 		createInitialCharSet
 
-		for {set differenceCheck 1} {$charSetSize > 128} {incr differenceCheck} {
-			for {set i 0} {$i < [llength $blocks]  && $charSetSize > 128 } {incr i} {
+		for {set differenceCheck 1} {$charSetSize > 256} {incr differenceCheck} {
+			for {set i 0} {$i < [llength $blocks]  && $charSetSize > 256 } {incr i} {
 			
 				if {[expr {$i % 100}] == 0} {puts "i: $i"}
 				
