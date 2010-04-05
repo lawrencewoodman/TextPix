@@ -167,7 +167,29 @@ namespace eval AcePixConverter {
 		}
 		
 		return $count
+	}
+	
+	# Count the number of black pixels in each sixteenth
+	proc blockSixteenth {block sixteenth} {
+		# TODO: Tidy up these formulae
+		set startY [expr {int(floor(($sixteenth*2) / 8)*2)}]
+		set endY [expr {$startY+1}]
+		set startX [expr {($sixteenth*2) % 8}]
+		set endX [expr {$startX+1}]
+		
+		set count 0
+		for {set y $startY} {$y <= $endY} {incr y} {
+			for {set x $startX} {$x <= $endX} {incr x} {
+				set i [expr {$y*8 + $x}]
+				if {[lindex $block $i] == 1} {
+					incr count
+				}
+			}	
+		}
+		
+		return $count
 	}				
+					
 	
 	# Check the difference in the number of pixels in each quarter
 	proc blockQuarterDifference {block1 block2} {
@@ -191,7 +213,6 @@ namespace eval AcePixConverter {
 	# If it can't find a block then it returns -1
 	# TODO: Consider comparing eighths first
 	# TODO: Improve this so that it tries to find a block near the centre of the picture
-	# TODO: Consider whether this would be better off returning the block rather than an indices
 	proc findSimilarBlock {compareChar quarterDifference} {
 		variable charSet 
 		variable blockSize
@@ -278,41 +299,70 @@ namespace eval AcePixConverter {
 		
 		# Put inverse characters of the charset at the end
 		foreach char $charSet {
-			lappendUnique charSet [getInverseBlock $char]
+			lappendUnique inverseCharSet [getInverseBlock $char]
 		}
 
+		# Haven't used concat because of chance of non unique items being added
+	# TODO: Probably get rid of this as I can see no reason for it anymore
+		foreach char $inverseCharSet { 
+			lappendUnique charSet $char
+		}
 
 		set charSet [lsort $charSet]
 		set charSetSize [expr {[llength $charSet]}]
 
 	}
+	
+	
+	# Substitute $char in blocks with the most similar char
+	proc substituteCharWithSimilarInBlocks {char} {
+		variable blocks
+		
+		set differenceCheck 0
+		set copyChar [findSimilarBlock $char $differenceCheck]
+		while {$copyChar == -1} {
+			incr differenceCheck
+			set copyChar [findSimilarBlock $char $differenceCheck]
+		}
+		
+		replaceBlocks $char $copyChar 
+	}
 
 	# TODO: Change this so that it uses a flag at the beginning to indicate not to remove the inverse
 	proc removeCharSetChar {char {removeInverse true}} {
+		variable blocks
 		variable charSet
 		variable charSetSize
 
 		set charSetIndex [lsearch -exact -sorted $charSet $char]
-		
+	
+		# Remove the char if it exists in the charset	
 		if {$charSetIndex != -1 } {
 			set charSet [lreplace $charSet $charSetIndex $charSetIndex]
 			incr charSetSize -1
 		}
 
+		# Remove the inverse of the char if it exists and is requested to be removed
 		if {$removeInverse} {
 			set inverseChar [getInverseBlock $char]		
 			set inverseCharSetIndex [lsearch -exact -sorted $charSet $inverseChar]
-		
+	
+			# TODO: Should be able to rely on this if everything prior is correct, should get rid of this?	
 			if {$inverseCharSetIndex != -1 } {
 				set charSet [lreplace $charSet $inverseCharSetIndex $inverseCharSetIndex]
 				incr charSetSize -1
+
+				# If the char is still in blocks
+				if {[lsearch -exact $blocks $char] != -1} {
+					substituteCharWithSimilarInBlocks $char			
+				}			
+			
 			}
 		}
 		
 	}
 
 	# Get the charset into a state where it can be exported to a data file ready to be loaded by the ace
-	# TODO: Probably get rid of this as I can see no reason for it anymore
 	proc finalizeCharSet {} {
 		variable charSet
 		variable charSetSize
@@ -328,7 +378,13 @@ namespace eval AcePixConverter {
 
 		# Put inverse characters of the charset at the end
 		foreach char $charSet {
-			lappend	charSet [getInverseBlock $char]
+			lappend	inverseCharSet [getInverseBlock $char]
+		}
+
+		# Haven't used concat because of chance of non unique items being added
+		# TODO: In theory shouldn't have to use lappendUnique and therefore could use concat, confirm this.
+		foreach char $inverseCharSet { 
+			lappendUnique charSet $char
 		}
 		
 		set charSetSize $oldCharSetSize
@@ -400,6 +456,7 @@ namespace eval AcePixConverter {
 	
 	}
 
+
 	proc reduceNumBlocks {} {
 		variable blocks
 		variable charSet
@@ -407,7 +464,7 @@ namespace eval AcePixConverter {
 
 		createInitialCharSet
 
-		for {set differenceCheck 1} {$charSetSize > 256} {incr differenceCheck} {
+		for {set differenceCheck 0} {$charSetSize > 256} {incr differenceCheck} {
 			for {set i 0} {$i < [llength $blocks]  && $charSetSize > 256 } {incr i} {
 			
 				if {[expr {$i % 100}] == 0} {puts "i: $i"}

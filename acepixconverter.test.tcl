@@ -140,6 +140,104 @@ proc test_replaceBlocks {} {
 }
 
 
+
+proc test_blockSixteenth {} {
+	puts -nonewline "test_blockSixteenth()  - "
+	
+	set block [list 0 1 0 1 1 1 0 0 \
+					1 0 0 0 1 1 0 0 \
+					1 0 1 1 1 1 1 0 \
+					0 0 0 1 0 0 0 1 \
+					0 1 1 0 0 1 0 1 \
+					0 1 0 0 1 1 1 0 \
+					1 0 1 0 0 0 1 1 \
+					1 1 0 0 1 1 0 0 ]
+					
+	if {[::AcePixConverter::blockSixteenth $block 0] != 2} {
+		puts "Faileda."
+		exit
+	}
+	
+	if {[::AcePixConverter::blockSixteenth $block 1] != 1} {
+		puts "Failedb."
+		exit
+	}
+
+	if {[::AcePixConverter::blockSixteenth $block 2] != 4} {
+		puts "Failedc."
+		exit
+	}
+		
+	if {[::AcePixConverter::blockSixteenth $block 3] != 0} {
+		puts "Failedd."
+		exit
+	}
+
+	if {[::AcePixConverter::blockSixteenth $block 4] != 1} {
+		puts "Failede."
+		exit
+	}
+
+	if {[::AcePixConverter::blockSixteenth $block 5] != 3} {
+		puts "Failedf."
+		exit
+	}
+
+	if {[::AcePixConverter::blockSixteenth $block 6] != 2} {
+		puts "Failedg."
+		exit
+	}
+	
+	if {[::AcePixConverter::blockSixteenth $block 7] != 2} {
+		puts "Failed."
+		exit
+	}
+	
+	if {[::AcePixConverter::blockSixteenth $block 8] != 2} {
+		puts "Failed."
+		exit
+	}
+	
+	if {[::AcePixConverter::blockSixteenth $block 9] != 1} {
+		puts "Failed."
+		exit
+	}
+	
+	if {[::AcePixConverter::blockSixteenth $block 10] != 3} {
+		puts "Failed."
+		exit
+	}
+
+	if {[::AcePixConverter::blockSixteenth $block 11] != 2} {
+		puts "Failed."
+		exit
+	}
+
+	if {[::AcePixConverter::blockSixteenth $block 12] != 3} {
+		puts "Failed."
+		exit
+	}
+
+	if {[::AcePixConverter::blockSixteenth $block 13] != 1} {
+		puts "Failed."
+		exit
+	}
+
+	if {[::AcePixConverter::blockSixteenth $block 14] != 2} {
+		puts "Failed."
+		exit
+	}
+
+	if {[::AcePixConverter::blockSixteenth $block 15] != 2} {
+		puts "Failed."
+		exit
+	}
+
+	
+	puts "Passed."
+}
+
+
 proc test_finalizeCharSet {} {
 	puts -nonewline "test_finalizeCharSet()  - "
 	
@@ -182,6 +280,6 @@ test_lcountUnique
 test_inverseCharExists
 test_getInverseBlock
 test_replaceBlocks
-
+test_blockSixteenth
 test_finalizeCharSet			
 exit
