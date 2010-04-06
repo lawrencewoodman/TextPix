@@ -19,83 +19,47 @@ proc test_lcountUnique {} {
 }
 
 
-proc test_getInverseBlock {} {
-	puts -nonewline "test_getInverseBlock() - "
-	
-	if {[::AcePixConverter::getInverseBlock [list 0 0 1 1]] !=  [list 1 1 0 0]} {
-		puts "Failed."
-		exit
-	}
-	
-	puts "Passed."
-
-}
-
-proc test_inverseCharExists {} {
-	puts -nonewline "test_inverseCharExists() - "
-	
-	set ::AcePixConverter::charSet [lsort [list {0 0 1 1} {1 1 0 0} {0 1 1 0}]]
-
-	# Test that it detects an inverse character
-	if {![::AcePixConverter::inverseCharExists [list 0 0 1 1]]} {
-		puts "Failed."
-		exit
-	}
-
-	# Test that it detects when no inverse character exists
-	if {[::AcePixConverter::inverseCharExists [list 1 0 1 1]]} {
-		puts "Failed."
-		exit
-	}
-	
-	
-	puts "Passed."
-}
-
-
-
+# TODO: Extened this to the checking of changing of blocks where inverse is removed and still in use.
 proc test_removeCharSetChar {} {
 	puts -nonewline "test_removeCharSetChar()  - "
-	set ::AcePixConverter::charSet [lsort [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {1 0 0 1}]]
-	set ::AcePixConverter::charSetSize 4
-	
+	set ::AcePixConverter::charSet [dict create {0 0 1 1} 1 {1 1 0 0} 1 {0 1 1 0} 1 {1 0 0 1} 1]
 	
 	# Test removing a char that exists
 	::AcePixConverter::removeCharSetChar {1 1 0 0}
 	
-	if {$::AcePixConverter::charSetSize != 2} {
+	if {[dict size $::AcePixConverter::charSet] != 2} {
 		puts "Failed."
 		exit
 	}
 	
-	if {$::AcePixConverter::charSet != [list {0 1 1 0} {1 0 0 1}]} {
+	if {$::AcePixConverter::charSet != [dict create {0 1 1 0} 1 {1 0 0 1} 1]} {
 		puts "Failed."
 		exit
 	}
 	
 	# Test removing a char that doesn't exist
-	::AcePixConverter::removeCharSetChar [list 0 0 0 1]
+	::AcePixConverter::removeCharSetChar {0 0 0 1}
 	
-	if {$::AcePixConverter::charSetSize != 2} {
+	if {[dict size $::AcePixConverter::charSet] != 2} {
 		puts "Failed."
 		exit
 	}
 	
-	if {$::AcePixConverter::charSet != [list {0 1 1 0} {1 0 0 1}]} {
+	if {$::AcePixConverter::charSet != [dict create {0 1 1 0} 1 {1 0 0 1} 1]} {
 		puts "Failed."
 		exit
 	}
 
 	
 	# Test removing a char but not its inverse 
-	::AcePixConverter::removeCharSetChar [list 1 0 0 1] false
+	::AcePixConverter::removeCharSetChar {1 0 0 1} false
 	
-	if {$::AcePixConverter::charSetSize != 1} {
+	if {[dict size $::AcePixConverter::charSet] != 1} {
 		puts "Failed."
 		exit
 	}
 	
-	if {$::AcePixConverter::charSet != [list {0 1 1 0} ]} {
+	if {$::AcePixConverter::charSet != [dict create {0 1 1 0} 1]} {
 		puts "Failed."
 	}
 	
@@ -111,12 +75,12 @@ proc test_createInitialCharSet {} {
 	
 	
 	
-	if {$::AcePixConverter::charSetSize != 6} {
+	if {[dict size $::AcePixConverter::charSet] != 6} {
 		puts "Failed."
 		exit
 	}
 
-	if {$::AcePixConverter::charSet != [list {0 0 0 0} {0 0 1 1} {0 1 1 0} {1 0 0 1} {1 1 0 0} {1 1 1 1} ]} {
+	if {$::AcePixConverter::charSet != [dict create {0 0 1 1} 3 {1 1 0 0} 1 {0 1 1 0} 2 {1 0 0 1} 1 {1 1 1 1} 1 {0 0 0 0} 0]} {
 		puts "Failed."
 		exit
 	}
@@ -238,26 +202,21 @@ proc test_blockSixteenth {} {
 }
 
 
-proc test_finalizeCharSet {} {
+proc test_calcPlainCharSet {} {
 	puts -nonewline "test_finalizeCharSet()  - "
 	
 	set ::AcePixConverter::blocks [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {0 0 1 1} {1 0 0 1} {0 1 1 0} {0 0 1 1} {1 1 1 1}]
 	::AcePixConverter::createInitialCharSet
 	
-	::AcePixConverter::finalizeCharSet
+	::AcePixConverter::calcPlainCharSet
 	
-	if {[llength $::AcePixConverter::charSet] != 6} {
+	if {[llength $::AcePixConverter::plainCharSet] != 6} {
 		puts "Failed."
 		exit
 	}
 
-	if {$::AcePixConverter::charSetSize != 6} {
-		puts "Failed."
-		exit
-	}
-
-	for {set i 0} {$i < [expr {$::AcePixConverter::charSetSize/2}]} {incr i} {
-		if {[lindex $::AcePixConverter::charSet $i] != [::AcePixConverter::getInverseBlock [lindex $::AcePixConverter::charSet [expr {$i + 3}]]]} {
+	for {set i 0} {$i < [expr {[llength $::AcePixConverter::plainCharSet/2]}]} {incr i} {
+		if {[lindex $::AcePixConverter::plainCharSet $i] != [::AcePixConverter::getInverseBlock [lindex $::AcePixConverter::plainCharSet [expr {$i + 3}]]]} {
 			puts "Failed."
 			exit
 		}
@@ -265,6 +224,99 @@ proc test_finalizeCharSet {} {
 
 
 	puts "Passed."
+}
+
+
+proc test_findBlocksWithDifference {} {
+	puts -nonewline "test_findBlocksWithDifference()  - "
+	
+	
+	set ::AcePixConverter::blocks [list]
+	
+	lappend ::AcePixConverter::blocks [list  0 1 0 1 1 1 0 0 \
+											 1 0 0 0 1 1 0 0 \
+											 1 0 1 1 1 1 1 0 \
+											 0 0 0 1 0 0 0 1 \
+											 0 1 1 0 0 1 0 1 \
+											 0 1 0 0 1 1 1 0 \
+											 1 0 1 0 0 0 1 1 \
+											 1 1 0 0 1 1 0 0]  
+
+
+	lappend ::AcePixConverter::blocks [list 1 0 1 1 0 1 0 1 \
+						 					1 0 0 1 1 0 1 0 \
+							 				1 1 0 1 1 0 0 1 \
+											1 0 1 1 0 1 1 0 \
+						 				 	1 0 1 1 0 1 0 1 \
+						 				 	1 1 0 1 1 0 1 0 \
+						 				 	0 1 1 0 0 1 0 1 \
+						 				 	1 0 1 1 1 0 1 0 ]
+						 				 
+	lappend ::AcePixConverter::blocks [list 1 0 1 1 1 0 0 0 \
+										 	1 1 1 1 1 0 0 1 \
+						 				 	1 1 0 0 1 1 0 1 \
+										 	0 1 1 1 1 0 1 0 \
+										 	0 1 0 1 1 0 0 0 \
+										 	1 0 1 1 0 1 0 0 \
+										 	1 0 0 1 0 0 1 0 \
+										 	1 1 0 0 1 0 0 0]
+										 	
+	lappend ::AcePixConverter::blocks [list 0 1 1 0 1 0 0 1 \
+						 					0 1 1 1 1 0 1 0 \
+							 				1 1 0 1 0 1 0 1 \
+											1 0 1 1 1 0 1 0 \
+						 				 	1 0 1 1 0 1 0 1 \
+						 				 	1 1 0 1 1 0 1 0 \
+						 				 	0 1 1 0 0 1 0 0 \
+						 				 	1 0 1 1 1 0 1 1 ]
+ 
+											 
+							 
+			 
+	::AcePixConverter::createInitialCharSet
+						 
+	set charNotExist [list  1 1 0 1 0 1 1 0 \
+							0 0 1 1 0 1 1 0 \
+							1 0 1 0 0 1 0 1 \
+							1 1 1 0 0 0 1 0 \
+							0 1 0 1 0 1 1 1 \
+							0 0 0 1 1 1 0 0 \
+							1 0 1 1 1 1 0 1 \
+							1 0 0 0 0 0 0 1 ]
+							
+							 		
+	set charNoDifference [lindex $::AcePixConverter::blocks 1]	
+	
+	# Test for a char that doesn't exist							
+	if {[::AcePixConverter::findBlocksWithDifference $charNotExist 0] != -1} {
+		puts "Failed."
+		exit
+	}
+
+	# Test for a char that exists and is no different in terms of 
+	set foundChars [::AcePixConverter::findBlocksWithDifference $charNoDifference 0]
+	
+	if {$foundChars == -1} {
+		puts "Failed."
+		exit
+	}
+	
+	if {[llength $foundChars] != 2} {
+		puts "Failed."
+		exit
+	}
+	
+	
+	if {[lindex $foundChars 0 ] != $charNoDifference} {
+		puts "Failed."
+		puts $foundChars
+		exit
+	}
+	
+
+												 
+						 
+	puts "Passed."					 
 }
 
 
@@ -278,8 +330,9 @@ test_removeCharSetChar
 
 test_lcountUnique
 test_inverseCharExists
-test_getInverseBlock
-test_replaceBlocks
+test_getInverseChar
+#test_replaceBlocks
 test_blockSixteenth
-test_finalizeCharSet			
+test_calcPlainCharSet
+test_findBlocksWithDifference			
 exit

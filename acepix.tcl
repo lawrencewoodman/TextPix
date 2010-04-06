@@ -14,7 +14,7 @@ source acepixconverter.tcl
 source acebinfilehandler.tcl
 
 proc saveByteFile {} {
-	::AcePixConverter::finalizeCharSet
+	::AcePixConverter::calcPlainCharSet
 	set charSetData [::AcePixConverter::getCharSetData]	
 	set screenData [::AcePixConverter::getScreenData]
 
@@ -23,14 +23,14 @@ proc saveByteFile {} {
 }
 
 proc savePNGfile {} {
-	$::AcePixConverter::aceImage write $::AcePixConverter::tempFilename -format PNG
+	$::AcePixConverter::aceImage write acepix.png -format PNG
 }
 
 
-set filename martin_the_gorilla.jpg
+#set filename martin_the_gorilla.jpg
 #set filename isaac2.jpg		;# Note the white background on this
 #set filename isaac.jpg
-#set filename cimg1446.jpg
+set filename cimg1446.jpg
 
 ::AcePixConverter::convertToBlocks $filename
 
