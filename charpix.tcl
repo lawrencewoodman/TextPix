@@ -26,27 +26,52 @@ proc savePNGfile {} {
 	$::CharPixConverter::aceImage write charpix.png -format PNG
 }
 
+proc reduce {} {
+	global reducedImage
+	::CharPixConverter::reduceNumBlocks
+	::CharPixConverter::displayBlocks	
+	$reducedImage copy $::CharPixConverter::aceImage
+}
 
-set filename martin_the_gorilla.jpg
-#set filename isaac2.jpg		;# Note the white background on this
-#set filename isaac.jpg
-#set filename cimg1446.jpg
+
+proc openFile {} {
+	global filename
+	global originalImage
+	
+	set filename [tk_getOpenFile -filetypes {{PNG .png} {JPEG .jpg} {All .*}}]
+	::CharPixConverter::convertToBlocks $filename
+	$originalImage copy $::CharPixConverter::aceImage	
+}
+
+menu .mbar
+. configure -menu .mbar
+.mbar add cascade -label File -menu .mbar.file -underline 0
+
+menu .mbar.file
+.mbar.file add command -label "Open file to convert" -command openFile -underline 0
+.mbar.file add command -label "Quit" -command exit -underline 0
 
 
 ::CharPixConverter::init 32 24 128 true
 
-::CharPixConverter::convertToBlocks $filename
+frame .buttons
+frame .pix
 
-ttk::button .reduce -text Reduce -command ::CharPixConverter::reduceNumBlocks
-ttk::button .refresh -text Refresh -command ::CharPixConverter::displayBlocks
+ttk::button .reduce -text Reduce -command reduce
 ttk::button .savepng -text "Save .PNG" -command savePNGfile
 ttk::button .saveace -text "Save ace.byt" -command saveByteFile
 
 set originalImage [image create photo]
-$originalImage copy $::CharPixConverter::aceImage
+set reducedImage [image create photo]
+
 label .originalImage -image $originalImage
-label .aceImage -image $::CharPixConverter::aceImage
+label .reducedImage -image $reducedImage
 
-grid .reduce .refresh .savepng .saveace .originalImage .aceImage	
 
+
+pack .reduce .savepng .saveace -in .buttons -side left
+pack .originalImage .reducedImage -in .pix
+
+pack .buttons -side top -fill x 
+pack .pix -side bottom -fill x
 

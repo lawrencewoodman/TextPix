@@ -41,7 +41,7 @@ namespace eval CharPixPreprocessor {
 
 	# TODO: Sort this out as it could overwrite a file that may be needed	
 	proc createTemporaryFile {filename} {
-		variable tempFilename "tmp.$filename.png"
+		variable tempFilename [file join [file dirname $filename] tmp.[file tail $filename].png]
 
 		exec convert $filename $tempFilename
 
