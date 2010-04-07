@@ -1,5 +1,5 @@
 #############################################################
-# File:		acepixconverter.tcl
+# File:		charpixconverter.tcl
 # Author:	Lawrence Woodman
 # Created:	31st March 2010
 #------------------------------------------------------------
@@ -7,7 +7,7 @@
 # loaded by the Jupiter Ace.
 #############################################################
 package require Img
-source acepixpreprocessor.tcl
+source charpixpreprocessor.tcl
 
 
 
@@ -42,32 +42,46 @@ proc lcountUnique {aList} {
 }
 
 
-namespace eval AcePixConverter {
-	# The Ace's screen size (256x192)
-	variable aceWidth 256
-	variable aceHeight 192
+namespace eval CharPixConverter {
+	variable pixelWidth
+	variable pixelHeight
 	variable aceImage
+	
+	variable horizontalChars
+	variable verticalChars
+	variable charSetSize
+	variable aceInverseMode
 
 	variable blocks
-	variable numBlocks 768
+	variable numBlocks 
 	variable blockDiameter 8
 	variable blockSize 64					;# The number of pixels in a block
 
 	variable charSet						;# Dictionary with the char as the key and the frequency as the value
+	variable plainCharSet					;# $charSet as a plain list without any frequency data
 	
-	variable plainCharSet					;# charset as plain list without any frequency data
+	
+	proc init {pHorizontalChars pVerticalChars pCharSetSize pAceInverseMode} {
+		variable horizontalChars $pHorizontalChars
+		variable verticalChars $pVerticalChars
+		variable charSetSize $pCharSetSize
+		variable aceInverseMode $pAceInverseMode
+		variable pixelWidth [expr {$horizontalChars * 8}]
+		variable pixelHeight [expr {$verticalChars * 8}]
+		variable numBlocks [expr {$horizontalChars * $verticalChars}]
+	}
 
 	proc convertToBlocks {filename} {
-		variable aceWidth
-		variable aceHeight
+		variable pixelWidth
+		variable pixelHeight
 		variable blocks
 		variable blockDiameter
 		variable aceImage
 
-		set aceImage [::acePixPreprocessor::preprocess $filename]
+		set aceImage [::CharPixPreprocessor::preprocess $filename]
 
-		for {set y 0} {$y < $aceHeight} {incr y $blockDiameter} {
-			for {set x 0} {$x < $aceWidth} {incr x $blockDiameter} {
+		for {set y 0} {$y < $pixelHeight} {incr y $blockDiameter} {
+			for {set x 0} {$x < $pixelWidth} {incr x $blockDiameter} {
 				lappend blocks [getBlock $x $y]
 			}
 		}		
@@ -171,23 +185,21 @@ namespace eval AcePixConverter {
 		return $difference
 	}
 	
+	
+	proc dictFilter_charDifference {char compareChar difference} {
+		if {$char != $compareChar && [blockSixteenthDifference $char $compareChar] == $difference} {
+			return true
+		} else {
+			return false		
+		}
+	}
 
 
 	# Find all the blocks with the given difference
 	proc findBlocksWithDifference {compareChar difference} {
 		variable charSet 
 
-		foreach char [dict keys $charSet] {
-			if {$char != $compareChar && [blockSixteenthDifference $char $compareChar] == $difference} {
-				lappend foundChars $char 
-			}
-		}
-
-		if {![info exists foundChars]} {
-			return -1
-		}
-		
-		return $foundChars
+		return [dict filter $charSet script {char freq} {dictFilter_charDifference $char $compareChar $difference}]
 	
 	}
 
@@ -197,18 +209,19 @@ namespace eval AcePixConverter {
 	# If it can't find a block then it returns -1
 	# TODO: Improve this so that it tries to find a block near the centre of the picture
 	proc findSimilarBlock {compareChar difference} {
+		variable charSet
 		variable blockSize
 
 		set foundChars [findBlocksWithDifference $compareChar $difference]
 
-		if {![info exists foundChars]} {
+		if {[llength $foundChars] == 0} {
 			return -1
 		}
 		
 
-		set lowestPixelCountDifference $blockSize
-
 		# Find the nearest chars in terms of pixel count
+		set lowestPixelCountDifference $blockSize
+		set nearestPixelCountChars [list [lindex $foundChars 0]]
 		foreach char $foundChars {
 			set tempPixelCountDifference [blockPixelCountDifference $char $compareChar]
 			if {$tempPixelCountDifference == $lowestPixelCountDifference} {
@@ -219,10 +232,14 @@ namespace eval AcePixConverter {
 			}
 		}
 		
-		set lowestPixelMatchingDifference $blockSize
-		set nearestChar [lindex $nearestPixelCountChars 0]
+		puts "findSimilarBlock() - length of \$nearestPixelCountChars: [llength $nearestPixelCountChars]"
+
 
 		# Find the nearest block in terms of matching pixels
+		# TODO: Consider getting rid of this as it probably makes little improvement compared to the time it takes
+		set lowestPixelMatchingDifference $blockSize
+		set nearestChar [lindex $nearestPixelCountChars 0]
+		
 		foreach char $nearestPixelCountChars {
 			set tempPixelMatchingDifference [blockPixelMatchingDifference $char $compareChar] 
 			if {$tempPixelMatchingDifference < $lowestPixelMatchingDifference} {
@@ -310,7 +327,9 @@ namespace eval AcePixConverter {
 				}
 			}
 		}
-		return [lrange $charSetData 0 1023]
+		
+		
+		return $charSetData
 	}
 	
 	proc replaceBlocks {oldBlock newBlock} {
@@ -319,16 +338,11 @@ namespace eval AcePixConverter {
 		set oldBlockIndices [lsearch -all -exact $blocks $oldBlock]
 	
 		foreach blockIndex $oldBlockIndices {
-			#lset blocks $blockIndex $newBlock]
-			set blocks [lreplace $blocks $blockIndex $blockIndex $newBlock]  
+			lset blocks $blockIndex $newBlock
 		}
 
 		# Update the chars frequency in the charset
-		# TODO: Calculate this rather than using lsearch		
-		set freq [llength [lsearch -all -exact $blocks $newBlock]]
-		dict set charSet $newBlock $freq
-
-	
+		dict incr charSet $newBlock [llength $oldBlockIndices]		
 	}
 
 
@@ -349,29 +363,28 @@ namespace eval AcePixConverter {
 		variable blocks
 		variable numBlocks
 		variable charSet
+		variable charSetSize
 
 		createInitialCharSet
 
-		for {set differenceCheck 0} {[dict size $charSet] > 128} {incr differenceCheck} {
-			for {set charFrequency 1} {$charFrequency <= $numBlocks && [dict size $charSet] > 128} {incr charFrequency} {
+		for {set differenceCheck 0} {[dict size $charSet] > $charSetSize} {incr differenceCheck} {
+			for {set charFrequency 1} {$charFrequency <= $numBlocks && [dict size $charSet] > $charSetSize} {incr charFrequency } {
 				set alreadyProcessedChars [list]			
 				set checkFreq true
 				while {$checkFreq} {
 					set checkFreq false
 					
-					set i 0		;# DEBUG: Get rid of this once all ok
 					dict for {char freq} [dict filter $charSet script {fChar fFreq} {dictFilter_notAlreadyProcessedChar $fChar $fFreq $alreadyProcessedChars $charFrequency}] {
 						lappend alreadyProcessedChars $char
-						incr i	;# DEBUG: Get rid of this once all ok
 						
 						set copyChar [findSimilarBlock $char $differenceCheck]
 		
 						if {$copyChar != -1} {
-							puts "reduceNumBlocks() - found Similar Block - i: $i, charFrequency: $charFrequency"
+							puts "reduceNumBlocks() - found Similar Block - charFrequency: $charFrequency"
 							removeCharSetChar $char
 							replaceBlocks $char $copyChar
 							
-							if {[dict size $charSet] <= 128} { 
+							if {[dict size $charSet] <= $charSetSize} { 
 								break
 							}
 							
@@ -388,16 +401,17 @@ namespace eval AcePixConverter {
 	}	
 	
 	proc displayBlocks {} {
-		variable aceWidth
-		variable aceHeight
+		variable pixelWidth
+		variable pixelHeight
 		variable aceImage
+		variable horizontalChars
 		variable blocks
 		variable numBlocks
 
 		for {set b 0} {$b <	$numBlocks} {incr b} {
 			set i 0
-			for {set y [expr {$b / 32} * 8]} {$y < [expr {$b / 32 * 8 + 8}]} {incr y} {
-				for {set x [expr {$b % 32 * 8}]} {$x < [expr {$b % 32 * 8 + 8}]} {incr x} {
+			for {set y [expr {$b / $horizontalChars} * 8]} {$y < [expr {$b / $horizontalChars * 8 + 8}]} {incr y} {
+				for {set x [expr {$b % $horizontalChars * 8}]} {$x < [expr {$b % $horizontalChars * 8 + 8}]} {incr x} {
 					set block [lindex $blocks $b]
 					if {[lindex $block $i] == 1} {
 						set colour #000 

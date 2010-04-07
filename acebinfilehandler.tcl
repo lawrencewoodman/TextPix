@@ -6,7 +6,7 @@
 # Functions for handling Jupiter Ace binary files.
 #############################################################
 
-namespace eval aceBinFileHandler {
+namespace eval AceBinFileHandler {
 
 	# data is a list
 	proc writeFile {filename data} {

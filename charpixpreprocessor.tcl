@@ -1,5 +1,5 @@
 #############################################################
-# File:		acepixpreprocessor.tcl
+# File:		charpixpreprocessor.tcl
 # Author:	Lawrence Woodman
 # Created:	31 March 2010
 #------------------------------------------------------------
@@ -16,7 +16,7 @@
 #############################################################
 package require Img
 
-namespace eval acePixPreprocessor {
+namespace eval CharPixPreprocessor {
 	# The Ace's screen size (256x192)
 	variable aceWidth 256
 	variable aceHeight 192

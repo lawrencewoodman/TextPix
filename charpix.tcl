@@ -1,5 +1,5 @@
 #############################################################
-# File:		acepix.tcl
+# File:		charpix.tcl
 # Author:	Lawrence Woodman
 # Created:	24th March 2010
 #------------------------------------------------------------
@@ -10,39 +10,42 @@
 # * For debian make sure that libtk-img package is present.
 # * ImageMagick must be installed.
 #############################################################
-source acepixconverter.tcl
+source charpixconverter.tcl
 source acebinfilehandler.tcl
 
 proc saveByteFile {} {
-	::AcePixConverter::calcPlainCharSet
-	set charSetData [::AcePixConverter::getCharSetData]	
-	set screenData [::AcePixConverter::getScreenData]
+	::CharPixConverter::calcPlainCharSet
+	set charSetData [::CharPixConverter::getCharSetData]	
+	set screenData [::CharPixConverter::getScreenData]
 
-	::aceBinFileHandler::writeFile "screen" $screenData
-	::aceBinFileHandler::writeFile "charset" $charSetData
+	::AceBinFileHandler::writeFile "screen" $screenData
+	::AceBinFileHandler::writeFile "charset" $charSetData
 }
 
 proc savePNGfile {} {
-	$::AcePixConverter::aceImage write acepix.png -format PNG
+	$::CharPixConverter::aceImage write charpix.png -format PNG
 }
 
 
-#set filename martin_the_gorilla.jpg
+set filename martin_the_gorilla.jpg
 #set filename isaac2.jpg		;# Note the white background on this
 #set filename isaac.jpg
-set filename cimg1446.jpg
+#set filename cimg1446.jpg
 
-::AcePixConverter::convertToBlocks $filename
 
-ttk::button .reduce -text Reduce -command ::AcePixConverter::reduceNumBlocks
-ttk::button .refresh -text Refresh -command ::AcePixConverter::displayBlocks
+::CharPixConverter::init 32 24 128 true
+
+::CharPixConverter::convertToBlocks $filename
+
+ttk::button .reduce -text Reduce -command ::CharPixConverter::reduceNumBlocks
+ttk::button .refresh -text Refresh -command ::CharPixConverter::displayBlocks
 ttk::button .savepng -text "Save .PNG" -command savePNGfile
 ttk::button .saveace -text "Save ace.byt" -command saveByteFile
 
 set originalImage [image create photo]
-$originalImage copy $::AcePixConverter::aceImage
+$originalImage copy $::CharPixConverter::aceImage
 label .originalImage -image $originalImage
-label .aceImage -image $::AcePixConverter::aceImage
+label .aceImage -image $::CharPixConverter::aceImage
 
 grid .reduce .refresh .savepng .saveace .originalImage .aceImage	
 

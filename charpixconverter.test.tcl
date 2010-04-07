@@ -1,11 +1,11 @@
 #############################################################
-# File:		acepixconverter.test.tcl
+# File:		charpixconverter.test.tcl
 # Author:	Lawrence Woodman
 # Created:	31st March 2010
 #------------------------------------------------------------
-# Tests for AcePixConverter namespace
+# Tests for CharPixConverter namespace
 #############################################################
-source acepixconverter.tcl
+source charpixconverter.tcl
 
 proc test_lcountUnique {} {
 	puts -nonewline "test_lcountUnique()  - "
@@ -22,44 +22,44 @@ proc test_lcountUnique {} {
 # TODO: Extened this to the checking of changing of blocks where inverse is removed and still in use.
 proc test_removeCharSetChar {} {
 	puts -nonewline "test_removeCharSetChar()  - "
-	set ::AcePixConverter::charSet [dict create {0 0 1 1} 1 {1 1 0 0} 1 {0 1 1 0} 1 {1 0 0 1} 1]
+	set ::CharPixConverter::charSet [dict create {0 0 1 1} 1 {1 1 0 0} 1 {0 1 1 0} 1 {1 0 0 1} 1]
 	
 	# Test removing a char that exists
-	::AcePixConverter::removeCharSetChar {1 1 0 0}
+	::CharPixConverter::removeCharSetChar {1 1 0 0}
 	
-	if {[dict size $::AcePixConverter::charSet] != 2} {
+	if {[dict size $::CharPixConverter::charSet] != 2} {
 		puts "Failed."
 		exit
 	}
 	
-	if {$::AcePixConverter::charSet != [dict create {0 1 1 0} 1 {1 0 0 1} 1]} {
+	if {$::CharPixConverter::charSet != [dict create {0 1 1 0} 1 {1 0 0 1} 1]} {
 		puts "Failed."
 		exit
 	}
 	
 	# Test removing a char that doesn't exist
-	::AcePixConverter::removeCharSetChar {0 0 0 1}
+	::CharPixConverter::removeCharSetChar {0 0 0 1}
 	
-	if {[dict size $::AcePixConverter::charSet] != 2} {
+	if {[dict size $::CharPixConverter::charSet] != 2} {
 		puts "Failed."
 		exit
 	}
 	
-	if {$::AcePixConverter::charSet != [dict create {0 1 1 0} 1 {1 0 0 1} 1]} {
+	if {$::CharPixConverter::charSet != [dict create {0 1 1 0} 1 {1 0 0 1} 1]} {
 		puts "Failed."
 		exit
 	}
 
 	
 	# Test removing a char but not its inverse 
-	::AcePixConverter::removeCharSetChar {1 0 0 1} false
+	::CharPixConverter::removeCharSetChar {1 0 0 1} false
 	
-	if {[dict size $::AcePixConverter::charSet] != 1} {
+	if {[dict size $::CharPixConverter::charSet] != 1} {
 		puts "Failed."
 		exit
 	}
 	
-	if {$::AcePixConverter::charSet != [dict create {0 1 1 0} 1]} {
+	if {$::CharPixConverter::charSet != [dict create {0 1 1 0} 1]} {
 		puts "Failed."
 	}
 	
@@ -70,17 +70,17 @@ proc test_removeCharSetChar {} {
 proc test_createInitialCharSet {} {
 	puts -nonewline "test_createInitialCharSet()  - "
 	
-	set ::AcePixConverter::blocks [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {0 0 1 1} {1 0 0 1} {0 1 1 0} {0 0 1 1} {1 1 1 1}]
-	::AcePixConverter::createInitialCharSet
+	set ::CharPixConverter::blocks [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {0 0 1 1} {1 0 0 1} {0 1 1 0} {0 0 1 1} {1 1 1 1}]
+	::CharPixConverter::createInitialCharSet
 	
 	
 	
-	if {[dict size $::AcePixConverter::charSet] != 6} {
+	if {[dict size $::CharPixConverter::charSet] != 6} {
 		puts "Failed."
 		exit
 	}
 
-	if {$::AcePixConverter::charSet != [dict create {0 0 1 1} 3 {1 1 0 0} 1 {0 1 1 0} 2 {1 0 0 1} 1 {1 1 1 1} 1 {0 0 0 0} 0]} {
+	if {$::CharPixConverter::charSet != [dict create {0 0 1 1} 3 {1 1 0 0} 1 {0 1 1 0} 2 {1 0 0 1} 1 {1 1 1 1} 1 {0 0 0 0} 0]} {
 		puts "Failed."
 		exit
 	}
@@ -91,11 +91,11 @@ proc test_createInitialCharSet {} {
 proc test_replaceBlocks {} {
 	puts -nonewline "test_replaceBlocks()  - "
 	
-	set ::AcePixConverter::blocks [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {0 0 1 1} {1 0 0 1} {0 1 1 0} {0 0 1 1} {1 1 1 1}]
+	set ::CharPixConverter::blocks [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {0 0 1 1} {1 0 0 1} {0 1 1 0} {0 0 1 1} {1 1 1 1}]
 		
-	::AcePixConverter::replaceBlocks [list 0 1 1 0] [list 0 1 1 1]
+	::CharPixConverter::replaceBlocks [list 0 1 1 0] [list 0 1 1 1]
 
-	if {$::AcePixConverter::blocks != [list {0 0 1 1} {1 1 0 0} {0 1 1 1} {0 0 1 1} {1 0 0 0} {0 1 1 1} {0 0 1 1} {1 1 1 1}]} {
+	if {$::CharPixConverter::blocks != [list {0 0 1 1} {1 1 0 0} {0 1 1 1} {0 0 1 1} {1 0 0 0} {0 1 1 1} {0 0 1 1} {1 1 1 1}]} {
 		puts "Failed."
 		exit
 	}
@@ -117,82 +117,82 @@ proc test_blockSixteenth {} {
 					1 0 1 0 0 0 1 1 \
 					1 1 0 0 1 1 0 0 ]
 					
-	if {[::AcePixConverter::blockSixteenth $block 0] != 2} {
+	if {[::CharPixConverter::blockSixteenth $block 0] != 2} {
 		puts "Faileda."
 		exit
 	}
 	
-	if {[::AcePixConverter::blockSixteenth $block 1] != 1} {
+	if {[::CharPixConverter::blockSixteenth $block 1] != 1} {
 		puts "Failedb."
 		exit
 	}
 
-	if {[::AcePixConverter::blockSixteenth $block 2] != 4} {
+	if {[::CharPixConverter::blockSixteenth $block 2] != 4} {
 		puts "Failedc."
 		exit
 	}
 		
-	if {[::AcePixConverter::blockSixteenth $block 3] != 0} {
+	if {[::CharPixConverter::blockSixteenth $block 3] != 0} {
 		puts "Failedd."
 		exit
 	}
 
-	if {[::AcePixConverter::blockSixteenth $block 4] != 1} {
+	if {[::CharPixConverter::blockSixteenth $block 4] != 1} {
 		puts "Failede."
 		exit
 	}
 
-	if {[::AcePixConverter::blockSixteenth $block 5] != 3} {
+	if {[::CharPixConverter::blockSixteenth $block 5] != 3} {
 		puts "Failedf."
 		exit
 	}
 
-	if {[::AcePixConverter::blockSixteenth $block 6] != 2} {
+	if {[::CharPixConverter::blockSixteenth $block 6] != 2} {
 		puts "Failedg."
 		exit
 	}
 	
-	if {[::AcePixConverter::blockSixteenth $block 7] != 2} {
+	if {[::CharPixConverter::blockSixteenth $block 7] != 2} {
 		puts "Failed."
 		exit
 	}
 	
-	if {[::AcePixConverter::blockSixteenth $block 8] != 2} {
+	if {[::CharPixConverter::blockSixteenth $block 8] != 2} {
 		puts "Failed."
 		exit
 	}
 	
-	if {[::AcePixConverter::blockSixteenth $block 9] != 1} {
+	if {[::CharPixConverter::blockSixteenth $block 9] != 1} {
 		puts "Failed."
 		exit
 	}
 	
-	if {[::AcePixConverter::blockSixteenth $block 10] != 3} {
+	if {[::CharPixConverter::blockSixteenth $block 10] != 3} {
 		puts "Failed."
 		exit
 	}
 
-	if {[::AcePixConverter::blockSixteenth $block 11] != 2} {
+	if {[::CharPixConverter::blockSixteenth $block 11] != 2} {
 		puts "Failed."
 		exit
 	}
 
-	if {[::AcePixConverter::blockSixteenth $block 12] != 3} {
+	if {[::CharPixConverter::blockSixteenth $block 12] != 3} {
 		puts "Failed."
 		exit
 	}
 
-	if {[::AcePixConverter::blockSixteenth $block 13] != 1} {
+	if {[::CharPixConverter::blockSixteenth $block 13] != 1} {
 		puts "Failed."
 		exit
 	}
 
-	if {[::AcePixConverter::blockSixteenth $block 14] != 2} {
+	if {[::CharPixConverter::blockSixteenth $block 14] != 2} {
 		puts "Failed."
 		exit
 	}
 
-	if {[::AcePixConverter::blockSixteenth $block 15] != 2} {
+	if {[::CharPixConverter::blockSixteenth $block 15] != 2} {
 		puts "Failed."
 		exit
 	}
@@ -205,18 +205,18 @@ proc test_blockSixteenth {} {
 proc test_calcPlainCharSet {} {
 	puts -nonewline "test_finalizeCharSet()  - "
 	
-	set ::AcePixConverter::blocks [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {0 0 1 1} {1 0 0 1} {0 1 1 0} {0 0 1 1} {1 1 1 1}]
-	::AcePixConverter::createInitialCharSet
+	set ::CharPixConverter::blocks [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {0 0 1 1} {1 0 0 1} {0 1 1 0} {0 0 1 1} {1 1 1 1}]
+	::CharPixConverter::createInitialCharSet
 	
-	::AcePixConverter::calcPlainCharSet
+	::CharPixConverter::calcPlainCharSet
 	
-	if {[llength $::AcePixConverter::plainCharSet] != 6} {
+	if {[llength $::CharPixConverter::plainCharSet] != 6} {
 		puts "Failed."
 		exit
 	}
 
-	for {set i 0} {$i < [expr {[llength $::AcePixConverter::plainCharSet/2]}]} {incr i} {
-		if {[lindex $::AcePixConverter::plainCharSet $i] != [::AcePixConverter::getInverseBlock [lindex $::AcePixConverter::plainCharSet [expr {$i + 3}]]]} {
+	for {set i 0} {$i < [expr {[llength $::CharPixConverter::plainCharSet/2]}]} {incr i} {
+		if {[lindex $::CharPixConverter::plainCharSet $i] != [::CharPixConverter::getInverseBlock [lindex $::CharPixConverter::plainCharSet [expr {$i + 3}]]]} {
 			puts "Failed."
 			exit
 		}
@@ -231,9 +231,9 @@ proc test_findBlocksWithDifference {} {
 	puts -nonewline "test_findBlocksWithDifference()  - "
 	
 	
-	set ::AcePixConverter::blocks [list]
+	set ::CharPixConverter::blocks [list]
 	
-	lappend ::AcePixConverter::blocks [list  0 1 0 1 1 1 0 0 \
+	lappend ::CharPixConverter::blocks [list  0 1 0 1 1 1 0 0 \
 											 1 0 0 0 1 1 0 0 \
 											 1 0 1 1 1 1 1 0 \
 											 0 0 0 1 0 0 0 1 \
@@ -243,7 +243,7 @@ proc test_findBlocksWithDifference {} {
 											 1 1 0 0 1 1 0 0]  
 
 
-	lappend ::AcePixConverter::blocks [list 1 0 1 1 0 1 0 1 \
+	lappend ::CharPixConverter::blocks [list 1 0 1 1 0 1 0 1 \
 						 					1 0 0 1 1 0 1 0 \
 							 				1 1 0 1 1 0 0 1 \
 											1 0 1 1 0 1 1 0 \
@@ -252,7 +252,7 @@ proc test_findBlocksWithDifference {} {
 						 				 	0 1 1 0 0 1 0 1 \
 						 				 	1 0 1 1 1 0 1 0 ]
 						 				 
-	lappend ::AcePixConverter::blocks [list 1 0 1 1 1 0 0 0 \
+	lappend ::CharPixConverter::blocks [list 1 0 1 1 1 0 0 0 \
 										 	1 1 1 1 1 0 0 1 \
 						 				 	1 1 0 0 1 1 0 1 \
 										 	0 1 1 1 1 0 1 0 \
@@ -261,7 +261,7 @@ proc test_findBlocksWithDifference {} {
 										 	1 0 0 1 0 0 1 0 \
 										 	1 1 0 0 1 0 0 0]
 										 	
-	lappend ::AcePixConverter::blocks [list 0 1 1 0 1 0 0 1 \
+	lappend ::CharPixConverter::blocks [list 0 1 1 0 1 0 0 1 \
 						 					0 1 1 1 1 0 1 0 \
 							 				1 1 0 1 0 1 0 1 \
 											1 0 1 1 1 0 1 0 \
@@ -273,7 +273,7 @@ proc test_findBlocksWithDifference {} {
 											 
 							 
 			 
-	::AcePixConverter::createInitialCharSet
+	::CharPixConverter::createInitialCharSet
 						 
 	set charNotExist [list  1 1 0 1 0 1 1 0 \
 							0 0 1 1 0 1 1 0 \
@@ -285,16 +285,16 @@ proc test_findBlocksWithDifference {} {
 							1 0 0 0 0 0 0 1 ]
 							
 							 		
-	set charNoDifference [lindex $::AcePixConverter::blocks 1]	
+	set charNoDifference [lindex $::CharPixConverter::blocks 1]	
 	
 	# Test for a char that doesn't exist							
-	if {[::AcePixConverter::findBlocksWithDifference $charNotExist 0] != -1} {
+	if {[::CharPixConverter::findBlocksWithDifference $charNotExist 0] != -1} {
 		puts "Failed."
 		exit
 	}
 
 	# Test for a char that exists and is no different in terms of 
-	set foundChars [::AcePixConverter::findBlocksWithDifference $charNoDifference 0]
+	set foundChars [::CharPixConverter::findBlocksWithDifference $charNoDifference 0]
 	
 	if {$foundChars == -1} {
 		puts "Failed."
