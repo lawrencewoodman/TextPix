@@ -17,26 +17,27 @@
 package require Img
 
 namespace eval CharPixPreprocessor {
-	# The Ace's screen size (256x192)
-	variable aceWidth 256
-	variable aceHeight 192
+	variable newWidth 
+	variable newHeight 
 	variable tempFilename 
-	variable aceImage
+	variable workingImage
 
 
-	proc preprocess {filename {background white}} {
+	proc preprocess {filename pNewWidth pNewHeight {background white}} {
+		variable newWidth $pNewWidth
+		variable newHeight $pNewHeight
 		variable tempFilename
-		variable aceImage
+		variable workingImage	
 		
 		createTemporaryFile $filename
 		
 		scale2Ace
 
-		set aceImage [image create photo  -file $tempFilename]
+		set workingImage [image create photo  -file $tempFilename]
 		expand2Ace $background
 		deleteTemporaryFile
 		
-		return $aceImage
+		return $workingImage
 	}
 
 	# TODO: Sort this out as it could overwrite a file that may be needed	
@@ -61,31 +62,31 @@ namespace eval CharPixPreprocessor {
 
 	# Expand the image to the size of the Ace's screen size 
 	proc expand2Ace {{backgroundColour white}} {
-		variable aceWidth
-		variable aceHeight
-		variable aceImage
+		variable newWidth
+		variable newHeight
+		variable workingImage
 
-		set imageWidth [image width $aceImage]
-		set imageHeight [image height $aceImage]
+		set imageWidth [image width $workingImage]
+		set imageHeight [image height $workingImage]
 
-		if {$imageWidth < $aceWidth || $imageHeight < $aceHeight} {
-			set tempImage [image create photo -width $aceWidth -height $aceHeight]
+		if {$imageWidth < $newWidth || $imageHeight < $newHeight} {
+			set tempImage [image create photo -width $newWidth -height $newHeight]
 		
-			set xOffset [expr {int(floor(($aceWidth - $imageWidth)/2))}]
-			set yOffset [expr {int(floor(($aceHeight - $imageHeight)/2))}]
+			set xOffset [expr {int(floor(($newWidth - $imageWidth)/2))}]
+			set yOffset [expr {int(floor(($newHeight - $imageHeight)/2))}]
 
 			colourBackground $tempImage $backgroundColour
-			$tempImage copy $aceImage -from 0 0 -to $xOffset $yOffset
-			$aceImage copy $tempImage
+			$tempImage copy $workingImage -from 0 0 -to $xOffset $yOffset
+			$workingImage copy $tempImage
 			image delete $tempImage
 		}	
 	}
 
 
 	proc colourBackground { image {backgroundColour white}} {
-		variable aceWidth
-		variable aceHeight
-		variable aceImage
+		variable newWidth
+		variable newHeight
+		variable workingImage
 
 		if {$backgroundColour == "white"} {
 			set putColour #fff
@@ -93,13 +94,13 @@ namespace eval CharPixPreprocessor {
 			set putColour #000
 		}
 
-		$image put $putColour -to 0 0 $aceWidth $aceHeight	
+		$image put $putColour -to 0 0 $newWidth $newHeight	
 	}
 
 	# Return the percent that the file needs scaling by
 	proc scalePercent {} {
-		variable aceWidth
-		variable aceHeight
+		variable newWidth
+		variable newHeight
 		variable tempFilename
 
 		set tempImage [image create photo  -file $tempFilename]
@@ -107,14 +108,16 @@ namespace eval CharPixPreprocessor {
 		set imageWidth [image width $tempImage]
 		set imageHeight [image height $tempImage]
 
-		set percent [expr {1.0 * $aceWidth / $imageWidth}]
+		set percent [expr {1.0 * $newWidth / $imageWidth}]
 
-		if {[expr {$percent * $imageHeight}] > $aceHeight} {
-			set percent [expr {1.0 * $percent * ($aceHeight / ($imageHeight * $percent))}]
+		if {[expr {$percent * $imageHeight}] > $newHeight} {
+			set percent [expr {1.0 * $percent * ($newHeight / ($imageHeight * $percent))}]
 		}
 
 		set percent [expr {$percent * 100}]
 		image delete $tempImage
+
+		puts "scalePercent: $percent, newWidth: $newWidth, newHeight: $newHeight, imageHeight: $imageHeight, imageWidth: $imageWidth"
 
 		return $percent
 	}

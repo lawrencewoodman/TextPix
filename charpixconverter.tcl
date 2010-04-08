@@ -78,7 +78,7 @@ namespace eval CharPixConverter {
 		variable blockDiameter
 		variable aceImage
 
-		set aceImage [::CharPixPreprocessor::preprocess $filename]
+		set aceImage [::CharPixPreprocessor::preprocess $filename $pixelWidth $pixelHeight]
 
 		for {set y 0} {$y < $pixelHeight} {incr y $blockDiameter} {
 			for {set x 0} {$x < $pixelWidth} {incr x $blockDiameter} {

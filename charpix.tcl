@@ -1,10 +1,11 @@
+#!/usr/bin/wish
 #############################################################
 # File:		charpix.tcl
 # Author:	Lawrence Woodman
 # Created:	24th March 2010
 #------------------------------------------------------------
-# Program to convert pictures into a form that can be
-# loaded by the Jupiter Ace.
+# Program to convert pictures into a character set and text
+# screen data using references to that character set.
 #------------------------------------------------------------
 # Requires:
 # * For debian make sure that libtk-img package is present.
@@ -52,7 +53,8 @@ menu .mbar.file
 .mbar.file add command -label "Quit" -command exit -underline 0
 
 
-::CharPixConverter::init 32 24 128 true
+#::CharPixConverter::init 32 24 128 true
+::CharPixConverter::init 80 25 256 false
 
 frame .buttons
 frame .pix
@@ -66,8 +68,6 @@ set reducedImage [image create photo]
 
 label .originalImage -image $originalImage
 label .reducedImage -image $reducedImage
-
-
 
 pack .reduce .savepng .saveace -in .buttons -side left
 pack .originalImage .reducedImage -in .pix
