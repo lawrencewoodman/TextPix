@@ -3,8 +3,8 @@
 # Author:	Lawrence Woodman
 # Created:	31st March 2010
 #------------------------------------------------------------
-# Functions for converting a picture into a form that can be
-# loaded by the Jupiter Ace.
+# Functions to convert pictures into a character set and text
+# screen data using references to that character set.
 #############################################################
 package require Img
 source charpixpreprocessor.tcl
