@@ -54,7 +54,7 @@ menu .mbar.file
 
 
 #::CharPixConverter::init 32 24 128 true
-::CharPixConverter::init 80 25 256 false
+::CharPixConverter::init 40 24 256 false
 
 frame .buttons
 frame .pix

@@ -9,7 +9,7 @@
 #------------------------------------------------------------
 # Requires:
 # * For debian make sure that libtk-img package is present.
-# * ImageMagick must be installed.#
+# * ImageMagick must be installed.
 #------------------------------------------------------------
 # TODO:
 # * Consider upping the contrast before converting the image.
@@ -31,10 +31,10 @@ namespace eval CharPixPreprocessor {
 		
 		createTemporaryFile $filename
 		
-		scale2Ace
+		scaleImage [scalePercent]
 
 		set workingImage [image create photo  -file $tempFilename]
-		expand2Ace $background
+		expand2NewSize $background
 		deleteTemporaryFile
 		
 		return $workingImage
@@ -60,8 +60,8 @@ namespace eval CharPixPreprocessor {
 		exec convert $tempFilename -resize $percent% -type Grayscale -posterize 2 $tempFilename
 	}
 
-	# Expand the image to the size of the Ace's screen size 
-	proc expand2Ace {{backgroundColour white}} {
+	# Expand the image to the size of the new image 
+	proc expand2NewSize {{backgroundColour white}} {
 		variable newWidth
 		variable newHeight
 		variable workingImage
@@ -117,12 +117,8 @@ namespace eval CharPixPreprocessor {
 		set percent [expr {$percent * 100}]
 		image delete $tempImage
 
-		puts "scalePercent: $percent, newWidth: $newWidth, newHeight: $newHeight, imageHeight: $imageHeight, imageWidth: $imageWidth"
 
 		return $percent
 	}
 
-	proc scale2Ace {} {
-		scaleImage [scalePercent]	
-	}
 }

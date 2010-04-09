@@ -11,13 +11,7 @@ source charpixpreprocessor.tcl
 
 
 
-#TODO: replace lreplace with lset where appropriate
-
-
-
-
 # Append a value to a list if the value doesn't already exist
-# TODO: May not need this
 proc lappendUnique {list value} {
 	upvar $list l
 
@@ -208,6 +202,7 @@ namespace eval CharPixConverter {
 	# Returns the index to the nearest block with the specified difference from the block passed. 
 	# If it can't find a block then it returns -1
 	# TODO: Improve this so that it tries to find a block near the centre of the picture
+	# TODO: Consider using something based on Damerau–Levenshtein distance
 	proc findSimilarBlock {compareChar difference} {
 		variable charSet
 		variable blockSize
