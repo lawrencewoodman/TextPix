@@ -5,7 +5,7 @@
 #------------------------------------------------------------
 # Tests for CharPixConverter namespace
 #############################################################
-source charpixconverter.tcl
+source ../charpixconverter.tcl
 
 proc test_lcountUnique {} {
 	puts -nonewline "test_lcountUnique()  - "
