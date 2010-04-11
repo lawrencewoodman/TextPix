@@ -1,5 +1,5 @@
 #############################################################
-# File:		charpixconverter.tcl
+# File:		textpixconverter.tcl
 # Author:	Lawrence Woodman
 # Created:	31st March 2010
 #------------------------------------------------------------
@@ -37,7 +37,7 @@
 
 #############################################################
 package require Img
-source charpixpreprocessor.tcl
+source textpixpreprocessor.tcl
 
 
 
@@ -66,7 +66,7 @@ proc lcountUnique {aList} {
 }
 
 
-namespace eval CharPixConverter {
+namespace eval TextPixConverter {
 	variable pixelWidth
 	variable pixelHeight
 	variable aceImage
@@ -102,7 +102,7 @@ namespace eval CharPixConverter {
 		variable blockDiameter
 		variable aceImage
 
-		set aceImage [::CharPixPreprocessor::preprocess $filename $pixelWidth $pixelHeight]
+		set aceImage [::TextPixPreprocessor::preprocess $filename $pixelWidth $pixelHeight]
 
 		for {set y 0} {$y < $pixelHeight} {incr y $blockDiameter} {
 			for {set x 0} {$x < $pixelWidth} {incr x $blockDiameter} {

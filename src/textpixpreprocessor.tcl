@@ -1,5 +1,5 @@
 #############################################################
-# File:		charpixpreprocessor.tcl
+# File:		textpixpreprocessor.tcl
 # Author:	Lawrence Woodman
 # Created:	31 March 2010
 #------------------------------------------------------------
@@ -45,7 +45,7 @@
 #############################################################
 package require Img
 
-namespace eval CharPixPreprocessor {
+namespace eval TextPixPreprocessor {
 	variable newWidth 
 	variable newHeight 
 	variable tempFilename 

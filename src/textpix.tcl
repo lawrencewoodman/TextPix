@@ -1,6 +1,6 @@
 #!/usr/bin/wish
 #############################################################
-# File:		charpix.tcl
+# File:		textpix.tcl
 # Author:	Lawrence Woodman
 # Created:	24th March 2010
 #------------------------------------------------------------
@@ -40,27 +40,27 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 # POSSIBILITY OF SUCH DAMAGE.
 #############################################################
-source charpixconverter.tcl
+source textpixconverter.tcl
 source acebinfilehandler.tcl
 
 proc saveByteFile {} {
-	::CharPixConverter::calcPlainCharSet
-	set charSetData [::CharPixConverter::getCharSetData]	
-	set screenData [::CharPixConverter::getScreenData]
+	::TextPixConverter::calcPlainCharSet
+	set charSetData [::TextPixConverter::getCharSetData]	
+	set screenData [::TextPixConverter::getScreenData]
 
 	::AceBinFileHandler::writeFile "screen" $screenData
 	::AceBinFileHandler::writeFile "charset" $charSetData
 }
 
 proc savePNGfile {} {
-	$::CharPixConverter::aceImage write charpix.png -format PNG
+	$::TextPixConverter::aceImage write textpix.png -format PNG
 }
 
 proc reduce {} {
 	global reducedImage
-	::CharPixConverter::reduceNumBlocks
-	::CharPixConverter::displayBlocks	
-	$reducedImage copy $::CharPixConverter::aceImage
+	::TextPixConverter::reduceNumBlocks
+	::TextPixConverter::displayBlocks	
+	$reducedImage copy $::TextPixConverter::aceImage
 }
 
 
@@ -69,8 +69,8 @@ proc openFile {} {
 	global originalImage
 	
 	set filename [tk_getOpenFile -filetypes {{PNG .png} {JPEG .jpg} {All .*}}]
-	::CharPixConverter::convertToBlocks $filename
-	$originalImage copy $::CharPixConverter::aceImage	
+	::TextPixConverter::convertToBlocks $filename
+	$originalImage copy $::TextPixConverter::aceImage	
 }
 
 menu .mbar
@@ -82,8 +82,8 @@ menu .mbar.file
 .mbar.file add command -label "Quit" -command exit -underline 0
 
 
-#::CharPixConverter::init 32 24 128 true
-::CharPixConverter::init 40 24 256 false
+::TextPixConverter::init 32 24 128 true		;# This is for the Jupiter Ace
+#::TextPixConverter::init 40 24 256 false
 
 frame .buttons
 frame .pix
