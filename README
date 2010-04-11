@@ -1,0 +1,9 @@
+TextPix
+=======
+TextPix takes an image and converts it into a redefined character set and text screen data.
+
+History
+-------
+It was first developed to create pictures for the Jupiter Ace because this computer doesn't have the ability to control each pixel on the screen individually, instead you can only redefine the character set.  Therefore I set about seeing if an image could be converted into just the 128 characters plus inverse, that the Ace allows.  
+
+Since first writing the program, I have designed to make it more generic so that it will work on other machines.  The main aim of doing this on other computers is that it would allow small movies to be displayed by just displaying text with a redefined character set.
