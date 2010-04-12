@@ -7,3 +7,15 @@ History
 It was first developed to create pictures for the Jupiter Ace because this computer doesn't have the ability to control each pixel on the screen individually, instead you can only redefine the character set.  Therefore I set about seeing if an image could be converted into just the 128 characters plus inverse, that the Ace allows.  
 
 Since first writing the program, I have designed to make it more generic so that it will work on other machines.  The main aim of doing this on other computers is that it would allow small movies to be displayed by just displaying text with a redefined character set.
+
+Running
+-------
+To run TextPix for the moment go into the 'src' sub-directory and run:
+	wish textpix.tcl
+
+Load a file through the 'File->Open File To Convert' menu option then click on 'Reduce'.  This will probably take a long time at the moment.  Once it is done it will display the new image and you can click on 'Save ace.byt'. This will create two files: charset.byt and screen.byt.
+
+If you are using a Jupiter Ace emulator such as 'xace', you can put these is a directory where 'xace' can find them and then start the emulator.  Within this type the following to load the image:
+	10240 1024 bload charset 8192 768 bload screen
+
+
