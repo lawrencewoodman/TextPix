@@ -239,7 +239,7 @@ namespace eval TextPixConverter {
 
 		set foundChars [findBlocksWithDifference $compareChar $difference]
 
-		if {[llength $foundChars] == 0} {
+		if {[dict size $foundChars] == 0} {
 			return -1
 		}
 		
@@ -247,7 +247,7 @@ namespace eval TextPixConverter {
 		# Find the nearest chars in terms of pixel count
 		set lowestPixelCountDifference $blockSize
 		set nearestPixelCountChars [list [lindex $foundChars 0]]
-		foreach char $foundChars {
+		dict for {char freq} $foundChars {
 			set tempPixelCountDifference [blockPixelCountDifference $char $compareChar]
 			if {$tempPixelCountDifference == $lowestPixelCountDifference} {
 				lappend nearestPixelCountChars $char

@@ -56,12 +56,12 @@ proc test_removeCharSetChar {} {
 	# Test removing a char that exists
 	::TextPixConverter::removeCharSetChar {1 1 0 0}
 	
-	if {[dict size $::TextPixConverter::charSet] != 2} {
+	if {[dict size $::TextPixConverter::charSet] != 3} {
 		puts "Failed."
 		exit
 	}
 	
-	if {$::TextPixConverter::charSet != [dict create {0 1 1 0} 1 {1 0 0 1} 1]} {
+	if {$::TextPixConverter::charSet != [dict create {0 0 1 1} 1 {0 1 1 0} 1 {1 0 0 1} 1]} {
 		puts "Failed."
 		exit
 	}
@@ -69,28 +69,17 @@ proc test_removeCharSetChar {} {
 	# Test removing a char that doesn't exist
 	::TextPixConverter::removeCharSetChar {0 0 0 1}
 	
-	if {[dict size $::TextPixConverter::charSet] != 2} {
+	if {[dict size $::TextPixConverter::charSet] != 3} {
 		puts "Failed."
 		exit
 	}
 	
-	if {$::TextPixConverter::charSet != [dict create {0 1 1 0} 1 {1 0 0 1} 1]} {
+	
+	if {$::TextPixConverter::charSet != [dict create {0 0 1 1} 1 {0 1 1 0} 1 {1 0 0 1} 1]} {
 		puts "Failed."
 		exit
 	}
 
-	
-	# Test removing a char but not its inverse 
-	::TextPixConverter::removeCharSetChar {1 0 0 1} false
-	
-	if {[dict size $::TextPixConverter::charSet] != 1} {
-		puts "Failed."
-		exit
-	}
-	
-	if {$::TextPixConverter::charSet != [dict create {0 1 1 0} 1]} {
-		puts "Failed."
-	}
 	
 	puts "Passed."
 }
@@ -104,12 +93,12 @@ proc test_createInitialCharSet {} {
 	
 	
 	
-	if {[dict size $::TextPixConverter::charSet] != 6} {
+	if {[dict size $::TextPixConverter::charSet] != 5} {
 		puts "Failed."
 		exit
 	}
 
-	if {$::TextPixConverter::charSet != [dict create {0 0 1 1} 3 {1 1 0 0} 1 {0 1 1 0} 2 {1 0 0 1} 1 {1 1 1 1} 1 {0 0 0 0} 0]} {
+	if {$::TextPixConverter::charSet != [dict create {0 0 1 1} 3 {1 1 0 0} 1 {0 1 1 0} 2 {1 0 0 1} 1 {1 1 1 1} 1 ]} {
 		puts "Failed."
 		exit
 	}
@@ -122,9 +111,9 @@ proc test_replaceBlocks {} {
 	
 	set ::TextPixConverter::blocks [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {0 0 1 1} {1 0 0 1} {0 1 1 0} {0 0 1 1} {1 1 1 1}]
 		
-	::TextPixConverter::replaceBlocks [list 0 1 1 0] [list 0 1 1 1]
+	::TextPixConverter::replaceBlocks {0 1 1 0} {0 1 1 1}
 
-	if {$::TextPixConverter::blocks != [list {0 0 1 1} {1 1 0 0} {0 1 1 1} {0 0 1 1} {1 0 0 0} {0 1 1 1} {0 0 1 1} {1 1 1 1}]} {
+	if {$::TextPixConverter::blocks != [list {0 0 1 1} {1 1 0 0} {0 1 1 1} {0 0 1 1} {1 0 0 1} {0 1 1 1} {0 0 1 1} {1 1 1 1}]} {
 		puts "Failed."
 		exit
 	}
@@ -147,37 +136,37 @@ proc test_blockSixteenth {} {
 					1 1 0 0 1 1 0 0 ]
 					
 	if {[::TextPixConverter::blockSixteenth $block 0] != 2} {
-		puts "Faileda."
+		puts "Failed."
 		exit
 	}
 	
 	if {[::TextPixConverter::blockSixteenth $block 1] != 1} {
-		puts "Failedb."
+		puts "Failed."
 		exit
 	}
 
 	if {[::TextPixConverter::blockSixteenth $block 2] != 4} {
-		puts "Failedc."
+		puts "Failed."
 		exit
 	}
 		
 	if {[::TextPixConverter::blockSixteenth $block 3] != 0} {
-		puts "Failedd."
+		puts "Failed."
 		exit
 	}
 
 	if {[::TextPixConverter::blockSixteenth $block 4] != 1} {
-		puts "Failede."
+		puts "Failed."
 		exit
 	}
 
 	if {[::TextPixConverter::blockSixteenth $block 5] != 3} {
-		puts "Failedf."
+		puts "Failed."
 		exit
 	}
 
 	if {[::TextPixConverter::blockSixteenth $block 6] != 2} {
-		puts "Failedg."
+		puts "Failed."
 		exit
 	}
 	
@@ -232,37 +221,35 @@ proc test_blockSixteenth {} {
 
 
 proc test_calcPlainCharSet {} {
-	puts -nonewline "test_finalizeCharSet()  - "
+	puts -nonewline "test_calcPlainCharSet()  - "
 	
 	set ::TextPixConverter::blocks [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {0 0 1 1} {1 0 0 1} {0 1 1 0} {0 0 1 1} {1 1 1 1}]
 	::TextPixConverter::createInitialCharSet
 	
 	::TextPixConverter::calcPlainCharSet
 	
-	if {[llength $::TextPixConverter::plainCharSet] != 6} {
+	if {[llength $::TextPixConverter::plainCharSet] != 5} {
 		puts "Failed."
 		exit
 	}
 
-	for {set i 0} {$i < [expr {[llength $::TextPixConverter::plainCharSet/2]}]} {incr i} {
-		if {[lindex $::TextPixConverter::plainCharSet $i] != [::TextPixConverter::getInverseBlock [lindex $::TextPixConverter::plainCharSet [expr {$i + 3}]]]} {
-			puts "Failed."
-			exit
-		}
+	if {$::TextPixConverter::plainCharSet != [list {0 0 1 1} {0 1 1 0} {1 0 0 1} {1 1 0 0} {1 1 1 1}]} {
+		puts "Failed."
+		exit	
 	}
-
 
 	puts "Passed."
 }
 
 
+# TODO: Test with greater difference than 0
 proc test_findBlocksWithDifference {} {
 	puts -nonewline "test_findBlocksWithDifference()  - "
 	
 	
 	set ::TextPixConverter::blocks [list]
 	
-	lappend ::TextPixConverter::blocks [list  0 1 0 1 1 1 0 0 \
+	lappend ::TextPixConverter::blocks [list 0 1 0 1 1 1 0 0 \
 											 1 0 0 0 1 1 0 0 \
 											 1 0 1 1 1 1 1 0 \
 											 0 0 0 1 0 0 0 1 \
@@ -273,31 +260,31 @@ proc test_findBlocksWithDifference {} {
 
 
 	lappend ::TextPixConverter::blocks [list 1 0 1 1 0 1 0 1 \
-						 					1 0 0 1 1 0 1 0 \
-							 				1 1 0 1 1 0 0 1 \
-											1 0 1 1 0 1 1 0 \
-						 				 	1 0 1 1 0 1 0 1 \
-						 				 	1 1 0 1 1 0 1 0 \
-						 				 	0 1 1 0 0 1 0 1 \
-						 				 	1 0 1 1 1 0 1 0 ]
+						 					 1 0 0 1 1 0 1 0 \
+							 				 1 1 0 1 1 0 0 1 \
+											 1 0 1 1 0 1 1 0 \
+						 				 	 1 0 1 1 0 1 0 1 \
+						 				 	 1 1 0 1 1 0 1 0 \
+						 				 	 0 1 1 0 0 1 0 1 \
+						 				 	 1 0 1 1 1 0 1 0 ]
 						 				 
 	lappend ::TextPixConverter::blocks [list 1 0 1 1 1 0 0 0 \
-										 	1 1 1 1 1 0 0 1 \
-						 				 	1 1 0 0 1 1 0 1 \
-										 	0 1 1 1 1 0 1 0 \
-										 	0 1 0 1 1 0 0 0 \
-										 	1 0 1 1 0 1 0 0 \
-										 	1 0 0 1 0 0 1 0 \
-										 	1 1 0 0 1 0 0 0]
+										 	 1 1 1 1 1 0 0 1 \
+						 				 	 1 1 0 0 1 1 0 1 \
+										 	 0 1 1 1 1 0 1 0 \
+										 	 0 1 0 1 1 0 0 0 \
+										 	 1 0 1 1 0 1 0 0 \
+										 	 1 0 0 1 0 0 1 0 \
+										 	 1 1 0 0 1 0 0 0]
 										 	
 	lappend ::TextPixConverter::blocks [list 0 1 1 0 1 0 0 1 \
-						 					0 1 1 1 1 0 1 0 \
-							 				1 1 0 1 0 1 0 1 \
-											1 0 1 1 1 0 1 0 \
-						 				 	1 0 1 1 0 1 0 1 \
-						 				 	1 1 0 1 1 0 1 0 \
-						 				 	0 1 1 0 0 1 0 0 \
-						 				 	1 0 1 1 1 0 1 1 ]
+						 					 0 1 1 1 1 0 1 0 \
+							 				 1 1 0 1 0 1 0 1 \
+											 1 0 1 1 1 0 1 0 \
+						 				 	 1 0 1 1 0 1 0 1 \
+						 				 	 1 1 0 1 1 0 1 0 \
+						 				 	 0 1 1 0 0 1 0 0 \
+						 				 	 1 0 1 1 1 0 1 1 ]
  
 											 
 							 
@@ -316,8 +303,9 @@ proc test_findBlocksWithDifference {} {
 							 		
 	set charNoDifference [lindex $::TextPixConverter::blocks 1]	
 	
-	# Test for a char that doesn't exist							
-	if {[::TextPixConverter::findBlocksWithDifference $charNotExist 0] != -1} {
+	# Test for a char that doesn't exist
+	set foundChars [::TextPixConverter::findBlocksWithDifference $charNotExist 0]	
+	if {[dict size $foundChars] != 0} {
 		puts "Failed."
 		exit
 	}
@@ -325,24 +313,18 @@ proc test_findBlocksWithDifference {} {
 	# Test for a char that exists and is no different in terms of 
 	set foundChars [::TextPixConverter::findBlocksWithDifference $charNoDifference 0]
 	
-	if {$foundChars == -1} {
+	if {[dict size $foundChars] != 1} {
 		puts "Failed."
 		exit
 	}
-	
-	if {[llength $foundChars] != 2} {
-		puts "Failed."
-		exit
-	}
-	
-	
-	if {[lindex $foundChars 0 ] != $charNoDifference} {
-		puts "Failed."
-		puts $foundChars
-		exit
-	}
-	
 
+	if {[dict get $foundChars [lindex $::TextPixConverter::blocks 3]] != 1} {
+		puts "Failed."
+
+		exit
+	}
+	
+	
 												 
 						 
 	puts "Passed."					 
@@ -358,9 +340,9 @@ test_createInitialCharSet
 test_removeCharSetChar
 
 test_lcountUnique
-test_inverseCharExists
-test_getInverseChar
-#test_replaceBlocks
+#test_inverseCharExists
+#test_getInverseChar
+test_replaceBlocks
 test_blockSixteenth
 test_calcPlainCharSet
 test_findBlocksWithDifference			
