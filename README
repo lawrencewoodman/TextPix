@@ -15,7 +15,10 @@ To run TextPix for the moment go into the 'src' sub-directory and run:
 
 Load a file through the 'File->Open File To Convert' menu option then click on 'Reduce'.  This will probably take a long time at the moment.  Once it is done it will display the new image and you can click on 'Save ace.byt'. This will create two files: charset.byt and screen.byt.
 
-If you are using a Jupiter Ace emulator such as 'xace', you can put these is a directory where 'xace' can find them and then start the emulator.  Within this type the following to load the image:
+If you are using a Jupiter Ace emulator such as 'xace', you can put these in a directory where 'xace' can find them and then start the emulator.  Within this type the following to load the image:
 	10240 1024 bload charset 8192 768 bload screen
 
+License
+-------
+This software is licensed under a 2 clause BSD license.  Please see the file, LICENSE, for details.
 
