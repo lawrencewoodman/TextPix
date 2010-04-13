@@ -384,6 +384,7 @@ namespace eval TextPixConverter {
 		return true
 	}
 
+
 	proc reduceNumBlocks {} {
 		variable blocks
 		variable numBlocks
@@ -394,26 +395,15 @@ namespace eval TextPixConverter {
 
 		for {set differenceCheck 0} {[dict size $charSet] > $charSetSize} {incr differenceCheck} {
 			for {set charFrequency 1} {$charFrequency <= $numBlocks && [dict size $charSet] > $charSetSize} {incr charFrequency } {
-				set alreadyProcessedChars [list]			
-				set checkFreq true
-				while {$checkFreq} {
-					set checkFreq false
-					
-					dict for {char freq} [dict filter $charSet script {fChar fFreq} {dictFilter_notAlreadyProcessedChar $fChar $fFreq $alreadyProcessedChars $charFrequency}] {
-						lappend alreadyProcessedChars $char
-						
-						set copyChar [findSimilarBlock $char $differenceCheck]
+				dict for {char freq} [dict filter $charSet value $charFrequency] {
+					set copyChar [findSimilarBlock $char $differenceCheck]
 		
-						if {$copyChar != -1} {
-							puts "reduceNumBlocks() - found Similar Block - charFrequency: $charFrequency"
-							removeCharSetChar $char
-							replaceBlocks $char $copyChar
+					if {$copyChar != -1} {
+						puts "reduceNumBlocks() - found Similar Block - freq: $freq"
+						removeCharSetChar $char
+						replaceBlocks $char $copyChar
 							
-							if {[dict size $charSet] <= $charSetSize} { 
-								break
-							}
-							
-							set checkFreq true
+						if {[dict size $charSet] <= $charSetSize} { 
 							break
 						}
 					}
@@ -424,6 +414,7 @@ namespace eval TextPixConverter {
 			puts "charSetSize: [dict size $charSet]"
 		}	
 	}	
+
 	
 	proc displayBlocks {} {
 		variable pixelWidth
