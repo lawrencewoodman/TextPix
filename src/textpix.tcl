@@ -73,6 +73,11 @@ proc openFile {} {
 	$originalImage copy $::TextPixConverter::aceImage	
 }
 
+
+
+#---------------------------
+# Set up the user interface
+#---------------------------
 menu .mbar
 . configure -menu .mbar
 .mbar add cascade -label File -menu .mbar.file -underline 0

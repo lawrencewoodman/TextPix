@@ -332,6 +332,154 @@ proc test_findBlocksWithDifference {} {
 
 
 
+proc test_getCharPixel {} {
+	puts -nonewline "test_getCharPixel()  - "
+	
+	
+	set char [list   0 1 0 1 1 1 0 0 \
+					 1 0 0 0 1 1 0 0 \
+					 1 0 1 1 1 1 1 0 \
+					 0 0 0 1 0 0 0 1 \
+					 0 1 1 0 0 1 0 1 \
+					 0 1 0 0 1 1 1 0 \
+					 1 0 1 0 0 0 1 1 \
+					 1 1 0 0 1 1 0 0]  
+
+	if {[::TextPixConverter::getCharPixel $char 0 0] != 0} {
+		puts "Failed."
+		exit
+	}
+	
+
+	if {[::TextPixConverter::getCharPixel $char 1 0] != 1} {
+		puts "Failed."
+		exit
+	}
+
+	if {[::TextPixConverter::getCharPixel $char 1 1] != 0} {
+		puts "Failed."
+		exit
+	}
+	
+	if {[::TextPixConverter::getCharPixel $char 2 2] != 1} {
+		puts "Failed."
+		exit
+	}
+	
+	if {[::TextPixConverter::getCharPixel $char 5 5] != 1} {
+		puts "Failed."
+		exit
+	}
+	
+	if {[::TextPixConverter::getCharPixel $char 7 7] != 0} {
+		puts "Failed."
+		exit
+	}
+	
+						 
+	puts "Passed."					 
+}
+
+
+
+
+# Need to test this more thoroughly to test top, bottom and sides each test
+proc test_matchingPixelAtDistance {} {
+	puts -nonewline "test_matchingPixelAtDistance()  - "
+	
+	
+	set char [list   1 1 0 1 1 1 0 0 \
+					 1 1 0 0 1 1 0 0 \
+					 1 0 0 0 0 0 1 0 \
+					 0 0 0 0 0 0 0 1 \
+					 0 1 0 0 0 0 0 1 \
+					 0 1 0 0 1 1 1 0 \
+					 1 0 1 0 0 0 1 1 \
+					 1 1 0 0 1 1 0 0]  
+
+	if {[::TextPixConverter::matchingPixelAtDistance $char 0 0 0 0]} {
+		puts "Failed."
+		exit
+	}
+	
+	if {![::TextPixConverter::matchingPixelAtDistance $char 0 0 0 1]} {
+		puts "Failed.b"
+		exit
+	}
+	
+	if {[::TextPixConverter::matchingPixelAtDistance $char 0 0 1 0]} {
+		puts "Failed.c"
+		exit
+	}
+
+	if {[::TextPixConverter::matchingPixelAtDistance $char 1 0 0 0]} {
+		puts "Failed."
+		exit
+	}
+
+	if {[::TextPixConverter::matchingPixelAtDistance $char 3 3 1 1]} {
+		puts "Failed."
+		exit
+	}
+	
+	if {![::TextPixConverter::matchingPixelAtDistance $char 3 3 2 1]} {
+		puts "Failed."
+		exit
+	}
+
+	# Tests whether it will match on the x and y if distance is greater than zero, but at the edge 	
+	set char [list   0 1 0 1 1 1 0 0 \
+					 1 1 0 0 1 1 0 0 \
+					 1 0 0 0 0 0 1 0 \
+					 0 0 0 0 0 0 0 1 \
+					 0 1 0 0 0 0 0 1 \
+					 0 1 0 0 1 1 1 0 \
+					 1 0 1 0 0 0 1 1 \
+					 1 1 0 0 1 1 0 0]  
+
+	if {[::TextPixConverter::matchingPixelAtDistance $char 0 0 1 0]} {
+		puts "Failed."
+		exit
+	}
+	
+						 
+	puts "Passed."					 
+}
+
+
+
+proc test_charDistance {} {
+	puts -nonewline "test_charDistance()  - "
+	
+	
+	set char1 [list  1 1 0 0 0 0 0 0 \
+					 1 0 0 0 0 0 0 0 \
+					 1 0 0 0 0 0 0 0 \
+					 0 1 0 0 0 0 1 0 \
+					 0 0 0 0 1 0 0 0 \
+					 0 1 1 0 0 0 0 0 \
+					 0 0 0 0 0 0 1 1 \
+					 1 0 0 0 1 0 1 1]  
+					 
+	set char2 [list  0 1 0 0 0 0 0 1 \
+					 1 0 0 0 0 0 0 0 \
+					 1 0 0 0 0 0 0 0 \
+					 0 0 0 0 0 0 0 0 \
+					 0 0 0 0 0 1 0 0 \
+					 0 1 0 0 0 0 0 0 \
+					 0 0 0 0 0 0 1 1 \
+					 1 1 0 0 1 1 0 0]
+					   
+	if {[::TextPixConverter::charDistance $char1 $char2] != 16} {
+		puts "Failed."
+		exit
+	}
+	
+						 
+	puts "Passed."					 
+}
+
+
 
 ########################################################
 #                    Run the tests
@@ -345,5 +493,8 @@ test_lcountUnique
 test_replaceBlocks
 test_blockSixteenth
 test_calcPlainCharSet
-test_findBlocksWithDifference			
+#test_findBlocksWithDifference
+test_getCharPixel
+test_matchingPixelAtDistance
+test_charDistance		
 exit

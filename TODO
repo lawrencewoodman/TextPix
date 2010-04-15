@@ -2,3 +2,4 @@
 * Add different internal and external file formats.
 * Allow for the aspect ratio of character font .  e.g. a text mode pc font is tall and thin.
 * Create an installer.
+* Change README to README.md using Markdown.

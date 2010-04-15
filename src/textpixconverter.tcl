@@ -211,7 +211,7 @@ namespace eval TextPixConverter {
 	
 	
 	proc dictFilter_charDifference {char compareChar difference} {
-		if {$char != $compareChar && [blockSixteenthDifference $char $compareChar] == $difference} {
+		if {$char != $compareChar && [blockSixteenthDifference $char $compareChar] == $difference} {  
 			return true
 		} else {
 			return false		
@@ -228,11 +228,81 @@ namespace eval TextPixConverter {
 	}
 
 
+	proc getCharPixel {char x y} {
+		return [lindex $char [expr {($y * 8)+$x}]]
+	}
+
+	# Returns whether there is a matching pixel at the specified distance
+	proc matchingPixelAtDistance {char xCentre yCentre distance pixel} {
+		set xStart [expr {max(0, ($xCentre-$distance))}]
+		set yStart [expr {max(0, ($yCentre-$distance))}]
+		set xEnd [expr {min(7, ($xCentre+$distance))}]
+		set yEnd [expr {min(7, ($yCentre+$distance))}]
+		
+		# Check top horizontal side
+		for {set x $xStart} {$x <= $xEnd} {incr x} {
+			if {!($distance >= 1 && $x == $xCentre && $yStart == $yCentre) && [getCharPixel $char $x $yStart] == $pixel} {
+				return true
+			}
+		}
+		
+		# Check vertical sides
+		# NOTE: I know that four of the pixels will be checked twice above and below, 
+		#		but this is quicker than recalculating and checking new boundaries
+		for {set y $yStart} {$y <= $yStart} {incr y} {
+			if {!($distance >= 1 && $xStart == $xCentre && $y == $yCentre) && [getCharPixel $char $xStart $y] == $pixel} {
+				return true
+			}
+			
+			if {!($distance >= 1 && $xEnd == $xCentre && $y == $yCentre) && [getCharPixel $char $xEnd $y] == $pixel} {
+				return true
+			}
+			
+		}
+		
+		
+		# Check bottom horizontal side
+		for {set x $xStart} {$x <= $xEnd} {incr x} {
+			if {!($distance >= 1 && $x == $xCentre && $yEnd == $yCentre) && [getCharPixel $char $x $yEnd] == $pixel} {
+				return true
+			}
+		}
+		
+		return false
+	}
+	
+	# Returns the distance to the nearest matching pixel or 8 if none found
+	proc distanceToPixel {char x y pixel} {
+		for {set distance 0} {$distance <= 7} {incr distance} {
+			if {[matchingPixelAtDistance $char $x $y $distance $pixel]} {
+				return $distance
+			}
+		}
+		
+		return 8	;# Chose 8 because this is outside the char boundary
+	}
+	
+	# Calculates the distance between two characters by adding the distance of each non-matching pixel to its nearest matching pixel
+	proc charDistance {char1 char2} {
+		set distance 0
+	
+		for {set y 0} {$y < 8} {incr y} {	
+			for {set x 0} {$x < 8} {incr x} {
+				# NOTE: The distance is checked both way rounds because they can be different
+				set pixelDistance1 [distanceToPixel $char1 $x $y [getCharPixel $char2 $x $y]]
+				set pixelDistance2 [distanceToPixel $char2 $x $y [getCharPixel $char1 $x $y]]
+				incr distance [expr {max ($pixelDistance1, $pixelDistance2)}]
+			}
+		} 
+		
+		
+		return $distance		
+	}
+
 	
 	# Returns the index to the nearest block with the specified difference from the block passed. 
 	# If it can't find a block then it returns -1
 	# TODO: Improve this so that it tries to find a block near the centre of the picture
-	# TODO: Consider using something based on Damerau–Levenshtein distance
 	proc findSimilarBlock {compareChar difference} {
 		variable charSet
 		variable blockSize
@@ -243,29 +313,28 @@ namespace eval TextPixConverter {
 			return -1
 		}
 		
+		puts "number of foundChars: [dict size $foundChars]"		
 
-		# Find the nearest chars in terms of pixel count
-		set lowestPixelCountDifference $blockSize
-		set nearestPixelCountChars [list [lindex $foundChars 0]]
+		# Find the nearest chars in terms of charDistance
+		set lowestCharDistance $blockSize
+		set nearestCharDistanceChars [list [lindex $foundChars 0]]
 		dict for {char freq} $foundChars {
-			set tempPixelCountDifference [blockPixelCountDifference $char $compareChar]
-			if {$tempPixelCountDifference == $lowestPixelCountDifference} {
-				lappend nearestPixelCountChars $char
-			} elseif {$tempPixelCountDifference < $lowestPixelCountDifference} {
-				set lowestPixelCountDifference $tempPixelCountDifference
-				set nearestPixelCountChars [list $char]
+			set tempCharDistance [charDistance $char $compareChar]
+			if {$tempCharDistance == $lowestCharDistance} {
+				lappend nearestCharDistanceChars $char
+			} elseif {$tempCharDistance < $lowestCharDistance} {
+				set lowestCharDistance $tempCharDistance
+				set nearestCharDistanceChars [list $char]
 			}
 		}
 		
-		puts "findSimilarBlock() - length of \$nearestPixelCountChars: [llength $nearestPixelCountChars]"
-
-
-		# Find the nearest block in terms of matching pixels
-		# TODO: Consider getting rid of this as it probably makes little improvement compared to the time it takes
-		set lowestPixelMatchingDifference $blockSize
-		set nearestChar [lindex $nearestPixelCountChars 0]
+		puts "findSimilarBlock() - length of \$nearestCharDistanceChars: [llength $nearestCharDistanceChars]"
 		
-		foreach char $nearestPixelCountChars {
+		# Find the nearest block in terms of matching pixels
+		set lowestPixelMatchingDifference $blockSize
+		set nearestChar [lindex $nearestCharDistanceChars 0]
+		
+		foreach char $nearestCharDistanceChars {
 			set tempPixelMatchingDifference [blockPixelMatchingDifference $char $compareChar] 
 			if {$tempPixelMatchingDifference < $lowestPixelMatchingDifference} {
 				set lowestPixelDifference $tempPixelMatchingDifference
@@ -273,8 +342,10 @@ namespace eval TextPixConverter {
 			}
 		}
 		
+		
 		return $nearestChar
 	}	
+
 
 
 
@@ -394,8 +465,9 @@ namespace eval TextPixConverter {
 		createInitialCharSet
 
 		for {set differenceCheck 0} {[dict size $charSet] > $charSetSize} {incr differenceCheck} {
-			for {set charFrequency 1} {$charFrequency <= $numBlocks && [dict size $charSet] > $charSetSize} {incr charFrequency } {
+			for {set charFrequency 1} {$charFrequency <= $numBlocks && [dict size $charSet] > $charSetSize} {incr charFrequency} {
 				dict for {char freq} [dict filter $charSet value $charFrequency] {
+#					puts "differenceCheck: $differenceCheck charFrequency: $charFrequency"
 					set copyChar [findSimilarBlock $char $differenceCheck]
 		
 					if {$copyChar != -1} {
@@ -406,6 +478,7 @@ namespace eval TextPixConverter {
 						if {[dict size $charSet] <= $charSetSize} { 
 							break
 						}
+						puts "new charSetSize: [dict size $charSet]"
 					}
 				}
 			}
