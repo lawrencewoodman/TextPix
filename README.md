@@ -4,9 +4,9 @@ TextPix takes an image and converts it into a redefined character set and text s
 
 History
 -------
-It was first developed to create pictures for the Jupiter Ace because this computer doesn't have the ability to control each pixel on the screen individually, instead you can only redefine the character set. Therefore I set about seeing if an image could be converted into just the 128 characters plus inverse, that the Ace allows.
+The program came about because I wanted to be able to load images on the Jupiter Ace, but the Ace has no way of allowing you to control individual pixels on the screen.  The best that you can do is redefine the character set and then use those redefined characters to display your image.  This does however present a problem as the Ace only allows you 128 characters plus their inverse in the character set.  Since the screen contains 32x24=768 characters, there would have to be massive repetition in the image to be able to use only 128 characters plus their inverse to display the image.  TextPix therefore tries to find similar sections of the images to replace other similar sections so that the number of characters needed in the character set can be brought down to 128.
 
-Since first writing the program, I have decided to make it more generic so that it will work on other machines. The ultimate aim of doing this on other computers is that it would allow small movies to be displayed by just displaying text with a redefined character set.
+Since first writing the program, I have decided to make it more generic so that it will work on other machines.  The ultimate aim of doing this on other computers is that it would allow small movies to be displayed by just displaying text with a redefined character set. 
 
 Status
 ------
