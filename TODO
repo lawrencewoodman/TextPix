@@ -1,5 +1,5 @@
 * Allow for different text screen sizes.
 * Add different internal and external file formats.
-* Allow for the aspect ratio of character font .  e.g. a text mode pc font is tall and thin.
+* Allow for the aspect ratio of character font .  e.g. an 80x25 text mode pc font is tall and thin.
 * Create an installer.
-* Change README to README.md using Markdown.
+
