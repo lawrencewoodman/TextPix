@@ -438,7 +438,7 @@ namespace eval TextPixConverter {
 	}
 
 
-	proc reduceNumBlocks {} {
+	proc reduceCharSet {} {
 		variable blocks
 		variable numBlocks
 		variable charSet
@@ -446,14 +446,15 @@ namespace eval TextPixConverter {
 
 		createInitialCharSet
 
-		for {set differenceCheck 0} {[dict size $charSet] > $charSetSize} {incr differenceCheck} {
-			for {set charFrequency 1} {$charFrequency <= $numBlocks && [dict size $charSet] > $charSetSize} {incr charFrequency} {
+		for {set charFrequency 1} {$charFrequency <= $numBlocks && [dict size $charSet] > $charSetSize} {incr charFrequency} {
+			for {set differenceCheck 0} {[dict size $charSet] > $charSetSize} {incr differenceCheck} {
 				dict for {char freq} [dict filter $charSet value $charFrequency] {
 #					puts "differenceCheck: $differenceCheck charFrequency: $charFrequency"
 					set copyChar [findSimilarBlock $char $differenceCheck]
 		
-					if {$copyChar != -1} {
-						puts "reduceNumBlocks() - found Similar Block - freq: $freq"
+					# NOTE: frequency is re-established in case it has changed in current loop
+					if {$copyChar != -1 && [dict get $charSet $char] == $charFrequency} {
+						puts "reduceNumBlocks() - found Similar Block - differenceCheck: $differenceCheck charFrequency: $charFrequency"
 						removeCharSetChar $char
 						replaceBlocks $char $copyChar
 							

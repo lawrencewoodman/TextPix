@@ -69,7 +69,7 @@ proc reduce {} {
 	::TextPixConverter::convertToBlocks $filename
 	$originalImage copy $::TextPixConverter::aceImage	
 	
-	::TextPixConverter::reduceNumBlocks
+	::TextPixConverter::reduceCharSet
 	::TextPixConverter::displayBlocks	
 	$reducedImage copy $::TextPixConverter::aceImage
 }
