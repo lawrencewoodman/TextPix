@@ -156,24 +156,6 @@ namespace eval TextPixConverter {
 	}
 	
 	
-	proc blockPixelCount {block} {
-		set count 0
-		
-		foreach b $block {
-			if {$b == 1} {
-				incr count
-			}
-		}
-		
-		return $count
-	}
-	
-	proc blockPixelCountDifference {block1 block2} {
-		return [expr {abs([blockPixelCount $block1] - [blockPixelCount $block2])}]
-	}	
-
-
-	
 	# Count the number of black pixels in each sixteenth
 	proc blockSixteenth {block sixteenth} {
 		# TODO: Tidy up these formulae
