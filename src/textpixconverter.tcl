@@ -69,7 +69,7 @@ proc lcountUnique {aList} {
 namespace eval TextPixConverter {
 	variable pixelWidth
 	variable pixelHeight
-	variable aceImage
+	variable workingImage
 	
 	variable horizontalChars
 	variable verticalChars
@@ -100,9 +100,9 @@ namespace eval TextPixConverter {
 		variable pixelHeight
 		variable blocks
 		variable blockDiameter
-		variable aceImage
+		variable workingImage
 
-		set aceImage [::TextPixPreprocessor::preprocess $filename $pixelWidth $pixelHeight]
+		set workingImage [::TextPixPreprocessor::preprocess $filename $pixelWidth $pixelHeight]
 
 		for {set y 0} {$y < $pixelHeight} {incr y $blockDiameter} {
 			for {set x 0} {$x < $pixelWidth} {incr x $blockDiameter} {
@@ -118,8 +118,8 @@ namespace eval TextPixConverter {
 	
 
 	proc getPixel {x y} {
-		variable aceImage
-		set colourList [$aceImage get $x $y]
+		variable workingImage
+		set colourList [$workingImage get $x $y]
 	
 		set blackList [list 255 255 255]
 	
@@ -452,7 +452,7 @@ namespace eval TextPixConverter {
 	proc displayBlocks {} {
 		variable pixelWidth
 		variable pixelHeight
-		variable aceImage
+		variable workingImage
 		variable horizontalChars
 		variable blocks
 		variable numBlocks
@@ -468,7 +468,7 @@ namespace eval TextPixConverter {
 						set colour #fff 
 					}
 
-					$aceImage put $colour -to $x $y
+					$workingImage put $colour -to $x $y
 
 					incr i
 				}

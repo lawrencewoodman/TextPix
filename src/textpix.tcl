@@ -53,7 +53,7 @@ proc saveByteFile {} {
 }
 
 proc savePNGfile {} {
-	$::TextPixConverter::aceImage write textpix.png -format PNG
+	$::TextPixConverter::workingImage write textpix.png -format PNG
 }
 
 proc reduce {} {
@@ -67,11 +67,11 @@ proc reduce {} {
 	::TextPixConverter::init $charWidth $charHeight $charSetSize true
 	
 	::TextPixConverter::convertToBlocks $filename
-	$originalImage copy $::TextPixConverter::aceImage	
+	$originalImage copy $::TextPixConverter::workingImage	
 	
 	::TextPixConverter::reduceCharSet
 	::TextPixConverter::displayBlocks	
-	$reducedImage copy $::TextPixConverter::aceImage
+	$reducedImage copy $::TextPixConverter::workingImage
 }
 
 
