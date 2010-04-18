@@ -141,20 +141,6 @@ namespace eval TextPixConverter {
 		return $block
 	}
 
-	proc blockPixelMatchingDifference {block1 block2} {
-		variable blockSize
-
-		set difference 0
-
-		for {set i 0} {$i <	$blockSize} {incr i} {
-			if {[lindex $block1 $i] != [lindex $block2 $i]} {
-				incr difference
-			}
-		}
-
-		return $difference
-	}
-	
 	
 	# Count the number of black pixels in each sixteenth
 	proc blockSixteenth {block sixteenth} {
@@ -311,19 +297,10 @@ namespace eval TextPixConverter {
 		}
 		
 		puts "findSimilarBlock() - length of \$nearestCharDistanceChars: [llength $nearestCharDistanceChars]"
-		
-		# Find the nearest block in terms of matching pixels
-		set lowestPixelMatchingDifference $blockSize
-		set nearestChar [lindex $nearestCharDistanceChars 0]
-		
-		foreach char $nearestCharDistanceChars {
-			set tempPixelMatchingDifference [blockPixelMatchingDifference $char $compareChar] 
-			if {$tempPixelMatchingDifference < $lowestPixelMatchingDifference} {
-				set lowestPixelDifference $tempPixelMatchingDifference
-				set nearestChar $char
-			}
-		}
-		
+
+		# Pick one of these chars at random.  The reason for this is to try and stop certain characters being repeated too much.
+		set lengthNearestCharDistanceChars [llength $nearestCharDistanceChars]
+		set nearestChar [lindex $nearestCharDistanceChars [expr {int(rand() * ($lengthNearestCharDistanceChars-1))}]]
 		
 		return $nearestChar
 	}	
