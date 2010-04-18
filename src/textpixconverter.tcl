@@ -145,7 +145,7 @@ namespace eval TextPixConverter {
 	# Count the number of black pixels in each sixteenth
 	proc blockSixteenth {block sixteenth} {
 		# TODO: Tidy up these formulae
-		set startY [expr {int(floor(($sixteenth*2) / 8)*2)}]
+		set startY [expr {int(($sixteenth / 4)*2)}]
 		set endY [expr {$startY+1}]
 		set startX [expr {($sixteenth*2) % 8}]
 		set endX [expr {$startX+1}]
