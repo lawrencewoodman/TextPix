@@ -351,9 +351,17 @@ namespace eval TextPixConverter {
 	proc getScreenData {} {
 		variable workingBlocks
 		variable plainCharSet
+		variable aceInverseMode
 
 		foreach block $workingBlocks {
-			lappend screenData [lsearch -exact $plainCharSet $block]
+			set charSetIndex [lsearch -exact $plainCharSet $block]
+			
+			if {$aceInverseMode && $charSetIndex == -1} {
+				set charSetIndex [lsearch -exact $plainCharSet [getInverseChar $block]]
+				incr charSetIndex 128
+			}
+			
+			lappend screenData $charSetIndex
 		}
 
 
