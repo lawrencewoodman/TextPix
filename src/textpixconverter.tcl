@@ -366,29 +366,25 @@ namespace eval TextPixConverter {
 		variable blockSize
 		
 		foreach char $plainCharSet { 
-			for {set element 0} {$element < $blockSize} {incr element} {
-
-				set column [expr {$element % 8}]
-
-				set pixel [lindex $char $element]
+			set inverseChar [getInverseChar $char]
+			for {set pixelIndex 0} {$pixelIndex < $blockSize} {incr pixelIndex} {
+				set columnNum [expr {$pixelIndex % 8}]
 				
-				# Invert the pixel
-				if {$pixel == 0} {
-					set pixel 1
-				} else {
-					set pixel 0
+				set pixel [lindex $inverseChar $pixelIndex]
+				
+				if {$columnNum == 0} {
+					set binaryLine 0
 				}
 				
+				set binaryLine [expr {$binaryLine | int(pow(2, (7-$columnNum)) * $pixel)}]
 
-				if {$column == 0} {
-					set bLine 0
+				if {$columnNum == 7} {
+					lappend charSetData $binaryLine
 				}
-				set bLine [expr {$bLine | int(pow(2, (7-$column)) * $pixel)}]
 
-				if {$column == 7} {
-					lappend charSetData $bLine
-				}
-			}
+				
+			}			
+			
 		}
 		
 		
@@ -433,10 +429,8 @@ namespace eval TextPixConverter {
 		createInitialCharSet
 
 		for {set charFrequency 1} {$charFrequency <= $numBlocks && [dict size $charSet] > $charSetSize} {incr charFrequency} {
-			puts "reduceCharSet() - Before \"for {set differenceCheck 0}...\"charFrequency: $charFrequency"
 			for {set differenceCheck 0} {[dict size $charSet] > $charSetSize} {incr differenceCheck} {
 				dict for {char freq} [dict filter $charSet value $charFrequency] {
-#					puts "differenceCheck: $differenceCheck charFrequency: $charFrequency"
 					set copyChar [findSimilarBlock $char $differenceCheck]
 		
 					# NOTE: frequency is re-established in case it has changed in current loop
