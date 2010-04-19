@@ -63,11 +63,12 @@ proc reduce {} {
 	global charWidth
 	global charHeight
 	global charSetSize
+	global aceInverseMode
 	
-	::TextPixConverter::init $charWidth $charHeight $charSetSize true
+	::TextPixConverter::init $charWidth $charHeight $charSetSize $aceInverseMode
 	
 	::TextPixConverter::convertToBlocks $filename
-	$originalImage copy $::TextPixConverter::workingImage	
+	$originalImage copy $::TextPixConverter::originalImage	
 	
 	::TextPixConverter::reduceCharSet
 	::TextPixConverter::displayBlocks	
@@ -101,19 +102,22 @@ frame .pix
 label .labelCharWidth -text "Character width:"
 label .labelCharHeight -text "Character height:"
 label .labelCharSetSize -text "Character set size:"
+label .labelAceInverseMode -text "Ace inverse mode: "
+
+ttk::button .reduce -text Reduce -command reduce
+ttk::button .savepng -text "Save .PNG" -command savePNGfile
+ttk::button .saveace -text "Save ace.byt" -command saveByteFile
 
 # Set default values for the spinboxes.  These are the normal settings for the Jupiter ace.
 set charWidth 32
 set charHeight 24
 set charSetSize 128
 
-spinbox .charWidth -width 2 -relief sunken -bd 2 -textvariable charWidth -from 5 -to 40 -increment 1 -state normal
+spinbox .charWidth -width 2 -relief sunken -bd 2 -textvariable charWidth -from 5 -to 40 -increment 1 -state normal 
 spinbox .charHeight -width 2 -relief sunken -bd 2 -textvariable charHeight -from 5 -to 25 -increment 1 -state normal
 spinbox .charSetSize -width 3 -relief sunken -bd 2 -textvariable charSetSize -from 5 -to 256 -increment 1 -state normal
 
-ttk::button .reduce -text Reduce -command reduce
-ttk::button .savepng -text "Save .PNG" -command savePNGfile
-ttk::button .saveace -text "Save ace.byt" -command saveByteFile
+checkbutton .aceInverseMode -text "Ace inverse mode" -bd 2 -variable aceInverseMode -onvalue true -offvalue false 
 
 set originalImage [image create photo]
 set reducedImage [image create photo]
@@ -123,7 +127,7 @@ label .labelReducedImage -text "Reduced Image"
 label .originalImage -image $originalImage -text "Original 2 Colour Image"
 label .reducedImage -image $reducedImage
 
-pack .reduce .savepng .saveace .labelCharWidth .charWidth .labelCharHeight .charHeight .labelCharSetSize .charSetSize -in .buttons -side left
+pack .reduce .savepng .saveace .labelCharWidth .charWidth .labelCharHeight .charHeight .labelCharSetSize .charSetSize .aceInverseMode -in .buttons -side left
 grid .originalImage .reducedImage -row 1 -in .pix
 grid .labelOriginalImage .labelReducedImage -row 2 -in .pix
 

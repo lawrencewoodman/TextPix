@@ -88,7 +88,7 @@ proc test_removeCharSetChar {} {
 proc test_createInitialCharSet {} {
 	puts -nonewline "test_createInitialCharSet()  - "
 	
-	set ::TextPixConverter::blocks [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {0 0 1 1} {1 0 0 1} {0 1 1 0} {0 0 1 1} {1 1 1 1}]
+	set ::TextPixConverter::workingBlocks [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {0 0 1 1} {1 0 0 1} {0 1 1 0} {0 0 1 1} {1 1 1 1}]
 	::TextPixConverter::createInitialCharSet
 	
 	
@@ -109,11 +109,11 @@ proc test_createInitialCharSet {} {
 proc test_replaceBlocks {} {
 	puts -nonewline "test_replaceBlocks()  - "
 	
-	set ::TextPixConverter::blocks [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {0 0 1 1} {1 0 0 1} {0 1 1 0} {0 0 1 1} {1 1 1 1}]
+	set ::TextPixConverter::workingBlocks [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {0 0 1 1} {1 0 0 1} {0 1 1 0} {0 0 1 1} {1 1 1 1}]
 		
 	::TextPixConverter::replaceBlocks {0 1 1 0} {0 1 1 1}
 
-	if {$::TextPixConverter::blocks != [list {0 0 1 1} {1 1 0 0} {0 1 1 1} {0 0 1 1} {1 0 0 1} {0 1 1 1} {0 0 1 1} {1 1 1 1}]} {
+	if {$::TextPixConverter::workingBlocks != [list {0 0 1 1} {1 1 0 0} {0 1 1 1} {0 0 1 1} {1 0 0 1} {0 1 1 1} {0 0 1 1} {1 1 1 1}]} {
 		puts "Failed."
 		exit
 	}
@@ -223,7 +223,7 @@ proc test_blockSixteenth {} {
 proc test_calcPlainCharSet {} {
 	puts -nonewline "test_calcPlainCharSet()  - "
 	
-	set ::TextPixConverter::blocks [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {0 0 1 1} {1 0 0 1} {0 1 1 0} {0 0 1 1} {1 1 1 1}]
+	set ::TextPixConverter::workingBlocks [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {0 0 1 1} {1 0 0 1} {0 1 1 0} {0 0 1 1} {1 1 1 1}]
 	::TextPixConverter::createInitialCharSet
 	
 	::TextPixConverter::calcPlainCharSet
@@ -247,44 +247,44 @@ proc test_findBlocksWithDifference {} {
 	puts -nonewline "test_findBlocksWithDifference()  - "
 	
 	
-	set ::TextPixConverter::blocks [list]
+	set ::TextPixConverter::workingBlocks [list]
 	
-	lappend ::TextPixConverter::blocks [list 0 1 0 1 1 1 0 0 \
-											 1 0 0 0 1 1 0 0 \
-											 1 0 1 1 1 1 1 0 \
-											 0 0 0 1 0 0 0 1 \
-											 0 1 1 0 0 1 0 1 \
-											 0 1 0 0 1 1 1 0 \
-											 1 0 1 0 0 0 1 1 \
-											 1 1 0 0 1 1 0 0]  
+	lappend ::TextPixConverter::workingBlocks [list 0 1 0 1 1 1 0 0 \
+													1 0 0 0 1 1 0 0 \
+													1 0 1 1 1 1 1 0 \
+													0 0 0 1 0 0 0 1 \
+													0 1 1 0 0 1 0 1 \
+													0 1 0 0 1 1 1 0 \
+													1 0 1 0 0 0 1 1 \
+													1 1 0 0 1 1 0 0]  
 
 
-	lappend ::TextPixConverter::blocks [list 1 0 1 1 0 1 0 1 \
-						 					 1 0 0 1 1 0 1 0 \
-							 				 1 1 0 1 1 0 0 1 \
-											 1 0 1 1 0 1 1 0 \
-						 				 	 1 0 1 1 0 1 0 1 \
-						 				 	 1 1 0 1 1 0 1 0 \
-						 				 	 0 1 1 0 0 1 0 1 \
-						 				 	 1 0 1 1 1 0 1 0 ]
+	lappend ::TextPixConverter::workingBlocks [list 1 0 1 1 0 1 0 1 \
+						 							1 0 0 1 1 0 1 0 \
+							 						1 1 0 1 1 0 0 1 \
+													1 0 1 1 0 1 1 0 \
+						 							1 0 1 1 0 1 0 1 \
+						 				 			1 1 0 1 1 0 1 0 \
+						 				 			0 1 1 0 0 1 0 1 \
+						 				 			1 0 1 1 1 0 1 0 ]
 						 				 
-	lappend ::TextPixConverter::blocks [list 1 0 1 1 1 0 0 0 \
-										 	 1 1 1 1 1 0 0 1 \
-						 				 	 1 1 0 0 1 1 0 1 \
-										 	 0 1 1 1 1 0 1 0 \
-										 	 0 1 0 1 1 0 0 0 \
-										 	 1 0 1 1 0 1 0 0 \
-										 	 1 0 0 1 0 0 1 0 \
-										 	 1 1 0 0 1 0 0 0]
+	lappend ::TextPixConverter::workingBlocks [list 1 0 1 1 1 0 0 0 \
+													1 1 1 1 1 0 0 1 \
+						 				 			1 1 0 0 1 1 0 1 \
+										 			0 1 1 1 1 0 1 0 \
+										 			0 1 0 1 1 0 0 0 \
+										 			1 0 1 1 0 1 0 0 \
+										 			1 0 0 1 0 0 1 0 \
+										 			1 1 0 0 1 0 0 0]
 										 	
-	lappend ::TextPixConverter::blocks [list 0 1 1 0 1 0 0 1 \
-						 					 0 1 1 1 1 0 1 0 \
-							 				 1 1 0 1 0 1 0 1 \
-											 1 0 1 1 1 0 1 0 \
-						 				 	 1 0 1 1 0 1 0 1 \
-						 				 	 1 1 0 1 1 0 1 0 \
-						 				 	 0 1 1 0 0 1 0 0 \
-						 				 	 1 0 1 1 1 0 1 1 ]
+	lappend ::TextPixConverter::workingBlocks [list 0 1 1 0 1 0 0 1 \
+						 							0 1 1 1 1 0 1 0 \
+							 						1 1 0 1 0 1 0 1 \
+													1 0 1 1 1 0 1 0 \
+						 				 			1 0 1 1 0 1 0 1 \
+						 				 			1 1 0 1 1 0 1 0 \
+						 				 			0 1 1 0 0 1 0 0 \
+						 				 			1 0 1 1 1 0 1 1 ]
  
 											 
 							 
@@ -479,6 +479,16 @@ proc test_charDistance {} {
 	puts "Passed."					 
 }
 
+proc test_getInverseChar {} {
+	puts -nonewline "test_getInverseChar() - "
+	
+	if {[::TextPixConverter::getInverseChar [list 0 0 1 1]] != [list 1 1 0 0]} {
+		puts "Failed."
+		exit
+	}
+	
+	puts "Passed."
+}
 
 
 ########################################################
@@ -489,7 +499,7 @@ test_removeCharSetChar
 
 test_lcountUnique
 #test_inverseCharExists
-#test_getInverseChar
+test_getInverseChar
 test_replaceBlocks
 test_blockSixteenth
 test_calcPlainCharSet

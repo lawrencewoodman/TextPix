@@ -69,6 +69,7 @@ proc lcountUnique {aList} {
 namespace eval TextPixConverter {
 	variable pixelWidth
 	variable pixelHeight
+	variable originalImage
 	variable workingImage
 	
 	variable horizontalChars
@@ -76,7 +77,8 @@ namespace eval TextPixConverter {
 	variable charSetSize
 	variable aceInverseMode
 
-	variable blocks
+	variable originalBlocks
+	variable workingBlocks
 	variable numBlocks 
 	variable blockDiameter 8
 	variable blockSize 64					;# The number of pixels in a block
@@ -98,20 +100,26 @@ namespace eval TextPixConverter {
 	proc convertToBlocks {filename} {
 		variable pixelWidth
 		variable pixelHeight
-		variable blocks
+		variable originalBlocks
+		variable workingBlocks
 		variable blockDiameter
+		variable originalImage
 		variable workingImage
 
-		set workingImage [::TextPixPreprocessor::preprocess $filename $pixelWidth $pixelHeight]
+		set originalImage [::TextPixPreprocessor::preprocess $filename $pixelWidth $pixelHeight]
+		set workingImage [image create photo]
+		$workingImage copy $originalImage
 
 		for {set y 0} {$y < $pixelHeight} {incr y $blockDiameter} {
 			for {set x 0} {$x < $pixelWidth} {incr x $blockDiameter} {
-				lappend blocks [getBlock $x $y]
+				set block [getBlock $x $y]
+				lappend originalBlocks $block			
+				lappend workingBlocks $block
 			}
 		}		
-		
 
-		puts "[lcountUnique $blocks] unique blocks."
+
+		puts "[lcountUnique $workingBlocks] unique workingBlocks."
 
 
 	}
@@ -309,12 +317,12 @@ namespace eval TextPixConverter {
 
 
 	proc createInitialCharSet {} {
-		variable blocks
+		variable workingBlocks
 		variable charSet
 
 		# Create a list of the unique blocks
-		foreach char $blocks {
-			set freq [llength [lsearch -all -exact $blocks $char]]
+		foreach char $workingBlocks {
+			set freq [llength [lsearch -all -exact $workingBlocks $char]]
 			dict set charSet $char $freq
 		}
 	}
@@ -341,10 +349,10 @@ namespace eval TextPixConverter {
 	}
 
 	proc getScreenData {} {
-		variable blocks
+		variable workingBlocks
 		variable plainCharSet
 
-		foreach block $blocks {
+		foreach block $workingBlocks {
 			lappend screenData [lsearch -exact $plainCharSet $block]
 		}
 
@@ -388,12 +396,12 @@ namespace eval TextPixConverter {
 	}
 	
 	proc replaceBlocks {oldBlock newBlock} {
-		variable blocks
+		variable workingBlocks
 		
-		set oldBlockIndices [lsearch -all -exact $blocks $oldBlock]
+		set oldBlockIndices [lsearch -all -exact $workingBlocks $oldBlock]
 	
 		foreach blockIndex $oldBlockIndices {
-			lset blocks $blockIndex $newBlock
+			lset workingBlocks $blockIndex $newBlock
 		}
 
 		# Update the chars frequency in the charset
@@ -416,14 +424,16 @@ namespace eval TextPixConverter {
 
 
 	proc reduceCharSet {} {
-		variable blocks
+		variable workingBlocks
 		variable numBlocks
 		variable charSet
 		variable charSetSize
+		variable aceInverseMode
 
 		createInitialCharSet
 
 		for {set charFrequency 1} {$charFrequency <= $numBlocks && [dict size $charSet] > $charSetSize} {incr charFrequency} {
+			puts "reduceCharSet() - Before \"for {set differenceCheck 0}...\"charFrequency: $charFrequency"
 			for {set differenceCheck 0} {[dict size $charSet] > $charSetSize} {incr differenceCheck} {
 				dict for {char freq} [dict filter $charSet value $charFrequency] {
 #					puts "differenceCheck: $differenceCheck charFrequency: $charFrequency"
@@ -443,9 +453,87 @@ namespace eval TextPixConverter {
 				}
 			}
 	
-			puts -nonewline "AFTER: reduce - differenceCheck: $differenceCheck unique blocks: [lcountUnique $blocks] "
+			puts -nonewline "AFTER: reduce - differenceCheck: $differenceCheck unique workingBlocks: [lcountUnique $workingBlocks] "
 			puts "charSetSize: [dict size $charSet]"
+		}
+		
+		if {$aceInverseMode} {
+			aceInverseAdjust
 		}	
+	}
+	
+	
+	proc getInverseChar {char} {
+		foreach pixel $char {
+			if {$pixel == 0} {
+				lappend inverseChar 1
+			} else {
+				lappend inverseChar 0
+			}
+		}
+		
+		return $inverseChar
+	}
+
+	# Go through the character set and return the nearest char from the inverse set to the char passed as a parameter
+	proc findNearestInverseChar {compareChar} {
+		variable charSet
+		variable blockSize
+	
+	
+		# Find the nearest char in terms of blockSixteenthDifference
+		set lowestSixteenthDifference 16
+		set nearestSixteenthDifferenceChars [lindex $charSet 0]
+		dict for {char freq} $charSet {
+			set inverseChar [getInverseChar $char]
+			set tempSixteenthDifference [blockSixteenthDifference $inverseChar $compareChar]
+			if {$tempSixteenthDifference == $lowestSixteenthDifference} {
+				lappend nearestSixteenthDifferenceChars $inverseChar
+			} elseif {$tempSixteenthDifference < $lowestSixteenthDifference} {
+				set lowestSixteenthDifference $tempSixteenthDifference
+				set nearestSixteenthDifferenceChars [list $inverseChar]
+			} 
+		}
+
+	
+		# Find the nearest chars in terms of charDistance
+		set lowestCharDistance $blockSize
+		set nearestCharDistanceChars [list [lindex $nearestSixteenthDifferenceChars 0]]
+		foreach char $nearestSixteenthDifferenceChars {
+			set tempCharDistance [charDistance $inverseChar $compareChar]
+			if {$tempCharDistance <= $lowestCharDistance} {
+				set lowestCharDistance $tempCharDistance
+				set nearestCharDistanceChar [list $char]
+			}
+		}
+
+		# Pick one of these chars at random.  The reason for this is to try and stop certain characters being repeated too much.
+		set lengthNearestCharDistanceChars [llength $nearestCharDistanceChars]
+		set nearestChar [lindex $nearestCharDistanceChars [expr {int(rand() * ($lengthNearestCharDistanceChars-1))}]]
+	
+		return $nearestChar
+	
+	}
+	
+	# Go back over the image and see if any of the inverse characters from the character set are a better match
+	proc aceInverseAdjust {} {
+		variable numBlocks
+		variable originalBlocks
+		variable workingBlocks
+		
+		
+		for {set b 0} {$b < $numBlocks} {incr b} {
+			puts "b: $b"
+			set workingBlockChar [lindex $workingBlocks $b]
+			set originalBlockChar [lindex $originalBlocks $b]
+			set nearestInverseChar [findNearestInverseChar $workingBlockChar]
+			set charDistanceToInverseChar [blockSixteenthDifference $nearestInverseChar $originalBlockChar]
+			set charDistanceToCurrentChar [blockSixteenthDifference $workingBlockChar $originalBlockChar]
+			if {$charDistanceToInverseChar < $charDistanceToCurrentChar} {
+				lset workingBlocks $b $nearestInverseChar
+				puts "found nearer InverseChar - b:$b"
+			}			
+		}
 	}	
 
 	
@@ -454,14 +542,14 @@ namespace eval TextPixConverter {
 		variable pixelHeight
 		variable workingImage
 		variable horizontalChars
-		variable blocks
+		variable workingBlocks
 		variable numBlocks
 
 		for {set b 0} {$b <	$numBlocks} {incr b} {
 			set i 0
 			for {set y [expr {$b / $horizontalChars} * 8]} {$y < [expr {$b / $horizontalChars * 8 + 8}]} {incr y} {
 				for {set x [expr {$b % $horizontalChars * 8}]} {$x < [expr {$b % $horizontalChars * 8 + 8}]} {incr x} {
-					set block [lindex $blocks $b]
+					set block [lindex $workingBlocks $b]
 					if {[lindex $block $i] == 1} {
 						set colour #000 
 					} else {
