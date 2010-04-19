@@ -413,20 +413,6 @@ namespace eval TextPixConverter {
 	}
 
 
-	proc dictFilter_notAlreadyProcessedChar {fChar fFreq alreadyProcessedChars charFrequency} {
-	
-		if {[lsearch -exact $alreadyProcessedChars $fChar] != -1} {
-			return false
-		}
-		
-		if {$fFreq != $charFrequency} {
-			return false
-		} 
-		
-		return true
-	}
-
-
 	proc reduceCharSet {} {
 		variable workingBlocks
 		variable numBlocks
