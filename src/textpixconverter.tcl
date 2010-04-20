@@ -467,7 +467,6 @@ namespace eval TextPixConverter {
 	
 		# Find the nearest char in terms of blockSixteenthDifference
 		set lowestSixteenthDifference 16
-		set nearestSixteenthDifferenceChars [lindex $charSet 0]
 		dict for {char freq} $charSet {
 			set inverseChar [getInverseChar $char]
 			set tempSixteenthDifference [blockSixteenthDifference $inverseChar $compareChar]
@@ -481,7 +480,7 @@ namespace eval TextPixConverter {
 
 	
 		# Find the nearest chars in terms of charDistance
-		set lowestCharDistance $blockSize
+		set lowestCharDistance [expr {8 * $blockSize}]
 		set nearestCharDistanceChars [list [lindex $nearestSixteenthDifferenceChars 0]]
 		foreach char $nearestSixteenthDifferenceChars {
 			set tempCharDistance [charDistance $inverseChar $compareChar]
