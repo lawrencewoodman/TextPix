@@ -34,5 +34,7 @@ If you are interested in contributing to TextPix, please look at the links above
 
 License
 -------
+Copyright (c) 2010 by Lawrence Woodman
+
 This software is licensed under a 2 clause BSD license.  Please see the file, LICENSE, for details.
 
