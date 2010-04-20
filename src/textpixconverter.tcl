@@ -498,13 +498,60 @@ namespace eval TextPixConverter {
 	
 	}
 	
+	
+	# Get characters in the character set that have the inverse in the character set.
+	proc getInverseCharDuplicates {} {
+		variable charSet
+		
+		set inverseDuplicateChars [list]
+		
+		dict for {char freq} $charSet {
+			set inverseChar [getInverseChar $char]
+			if {[dict exists $charSet $inverseChar] && [lsearch -exact $inverseDuplicateChars $inverseChar] == -1 && [lsearch -exact $inverseDuplicateChars $char] == -1} {
+				lappend inverseDuplicateChars $char
+				
+				puts "getInverseCharDuplicates() - freq: $freq"
+			}
+		}
+		
+		return $inverseDuplicateChars
+	}
+
+	
+	# Replaces a character in the character set
+	# NOTE: This sets its frequency to 1
+	proc replaceCharSetChar {oldChar newChar} {
+		variable charSet
+		
+		dict unset charSet $oldChar
+		dict set charSet $newChar 1
+	}
+	
+	
 	# Go back over the image and see if any of the inverse characters from the character set are a better match
 	proc aceInverseAdjust {} {
 		variable numBlocks
 		variable originalBlocks
 		variable workingBlocks
+
+		set replacementChars [list]
+		set inverseDuplicates [getInverseCharDuplicates]
+		for {set differenceCheck 16} {$differenceCheck >= 0 && [llength $inverseDuplicates] > 0} {incr differenceCheck -1} {
+			for {set b 0} {$b < $numBlocks && [llength $inverseDuplicates] > 0} {incr b} {
+				set workingBlockChar [lindex $workingBlocks $b]
+				set originalBlockChar [lindex $originalBlocks $b]
+					
+				if {[blockSixteenthDifference $workingBlockChar $originalBlockChar] == $differenceCheck} {
+					replaceBlocks $workingBlockChar $originalBlockChar
+					replaceCharSetChar [lindex $inverseDuplicates 0] $originalBlockChar
+					set inverseDuplicates [lrange $inverseDuplicates 1 end]
+				}
+			}
 		
+		}
 		
+
+		# TODO: Sort out the variable names below.  E.g. sixteenth vs charDistance
 		for {set b 0} {$b < $numBlocks} {incr b} {
 			puts "b: $b"
 			set workingBlockChar [lindex $workingBlocks $b]

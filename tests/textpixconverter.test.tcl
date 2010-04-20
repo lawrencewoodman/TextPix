@@ -491,6 +491,22 @@ proc test_getInverseChar {} {
 }
 
 
+proc test_getInverseCharDuplicates {} {
+	puts -nonewline "test_getInverseCharDuplicates()  - "
+	
+	set ::TextPixConverter::charSet [dict create {0 0 1 1} 1 {1 1 0 0} 1 {0 1 1 0} 1 {1 0 0 1} 1]	
+					
+	if {[::TextPixConverter::getInverseCharDuplicates] != [list {0 0 1 1} {0 1 1 0}]} {
+		puts "Failed."
+		exit
+	}
+	
+						 
+	puts "Passed."					 
+}
+
+
+
 ########################################################
 #                    Run the tests
 ########################################################
@@ -498,13 +514,15 @@ test_createInitialCharSet
 test_removeCharSetChar
 
 test_lcountUnique
-#test_inverseCharExists
-test_getInverseChar
 test_replaceBlocks
 test_blockSixteenth
 test_calcPlainCharSet
 #test_findBlocksWithDifference
 test_getCharPixel
 test_matchingPixelAtDistance
-test_charDistance		
+test_charDistance
+test_getInverseChar
+test_getInverseCharDuplicates
+
+		
 exit
