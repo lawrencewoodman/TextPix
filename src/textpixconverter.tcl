@@ -186,21 +186,18 @@ namespace eval TextPixConverter {
 	}
 	
 	
-	proc dictFilter_charDifference {char compareChar difference} {
-		if {$char != $compareChar && [blockSixteenthDifference $char $compareChar] == $difference} {  
-			return true
-		} else {
-			return false		
-		}
-	}
-
-
 	# Find all the blocks with the given difference
 	proc findBlocksWithDifference {compareChar difference} {
 		variable charSet 
 
-		return [dict filter $charSet script {char freq} {dictFilter_charDifference $char $compareChar $difference}]
+		set foundChars [list]
+		dict for {char freq} $charSet {
+			if {$char != $compareChar && [blockSixteenthDifference $char $compareChar] == $difference} {
+				lappend foundChars $char  
+			}
+		}
 	
+		return $foundChars
 	}
 
 
@@ -285,16 +282,15 @@ namespace eval TextPixConverter {
 
 		set foundChars [findBlocksWithDifference $compareChar $difference]
 
-		if {[dict size $foundChars] == 0} {
+		if {[llength $foundChars] == 0} {
 			return -1
 		}
 		
-		puts "number of foundChars: [dict size $foundChars]"		
+		puts "number of foundChars: [llength $foundChars]"
 
 		# Find the nearest chars in terms of charDistance
-		set lowestCharDistance $blockSize
-		set nearestCharDistanceChars [list [lindex $foundChars 0]]
-		dict for {char freq} $foundChars {
+		set lowestCharDistance [expr {$blockSize * 8}]
+		foreach char $foundChars {
 			set tempCharDistance [charDistance $char $compareChar]
 			if {$tempCharDistance == $lowestCharDistance} {
 				lappend nearestCharDistanceChars $char
@@ -305,7 +301,7 @@ namespace eval TextPixConverter {
 		}
 		
 		puts "findSimilarBlock() - length of \$nearestCharDistanceChars: [llength $nearestCharDistanceChars]"
-
+		
 		# Pick one of these chars at random.  The reason for this is to try and stop certain characters being repeated too much.
 		set lengthNearestCharDistanceChars [llength $nearestCharDistanceChars]
 		set nearestChar [lindex $nearestCharDistanceChars [expr {int(rand() * ($lengthNearestCharDistanceChars-1))}]]
