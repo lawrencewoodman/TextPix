@@ -509,8 +509,6 @@ namespace eval TextPixConverter {
 			set inverseChar [getInverseChar $char]
 			if {[dict exists $charSet $inverseChar] && [lsearch -exact $inverseDuplicateChars $inverseChar] == -1 && [lsearch -exact $inverseDuplicateChars $char] == -1} {
 				lappend inverseDuplicateChars $char
-				
-				puts "getInverseCharDuplicates() - freq: $freq"
 			}
 		}
 		
