@@ -73,6 +73,11 @@ proc reduce {} {
 	::TextPixConverter::reduceCharSet
 	::TextPixConverter::displayBlocks	
 	$reducedImage copy $::TextPixConverter::workingImage
+	
+	.reduce config -state disabled
+	
+	.mbar.file entryconfigure "Save reduced image as a .PNG" -state normal
+	.mbar.file entryconfigure "Save Jupiter Ace .byt files" -state normal
 }
 
 
@@ -81,6 +86,8 @@ proc openFile {} {
 	global originalImage
 	
 	set filename [tk_getOpenFile -filetypes {{PNG .png} {JPEG .jpg} {All .*}}]
+	
+	.reduce config -state normal
 }
 
 
@@ -94,19 +101,19 @@ menu .mbar
 
 menu .mbar.file
 .mbar.file add command -label "Open file to convert" -command openFile -underline 0
+.mbar.file add command -label "Save reduced image as a .PNG" -command savePNGfile -underline 25 -state disabled
+.mbar.file add command -label "Save Jupiter Ace .byt files" -command saveByteFile -underline 13 -state disabled
 .mbar.file add command -label "Quit" -command exit -underline 0
 
 frame .buttons
 frame .pix
 
-label .labelCharWidth -text "Character width:"
-label .labelCharHeight -text "Character height:"
-label .labelCharSetSize -text "Character set size:"
-label .labelAceInverseMode -text "Ace inverse mode: "
+label .labelCharWidth -padx 3m -text "Character width:"
+label .labelCharHeight -padx 3m -text "Character height:"
+label .labelCharSetSize -padx 3m -text "Character set size:"
+label .labelAceInverseMode -padx 3m -text "Ace inverse mode: "
 
-ttk::button .reduce -text Reduce -command reduce
-ttk::button .savepng -text "Save .PNG" -command savePNGfile
-ttk::button .saveace -text "Save ace.byt" -command saveByteFile
+ttk::button .reduce -state disabled -text Reduce -command reduce
 
 # Set default values for the spinboxes.  These are the normal settings for the Jupiter ace.
 set charWidth 32
@@ -127,7 +134,7 @@ label .labelReducedImage -text "Reduced Image"
 label .originalImage -image $originalImage -text "Original 2 Colour Image"
 label .reducedImage -image $reducedImage
 
-pack .reduce .savepng .saveace .labelCharWidth .charWidth .labelCharHeight .charHeight .labelCharSetSize .charSetSize .aceInverseMode -in .buttons -side left
+pack .reduce .labelCharWidth .charWidth .labelCharHeight .charHeight .labelCharSetSize .charSetSize .aceInverseMode -in .buttons -side left
 grid .originalImage .reducedImage -row 1 -in .pix
 grid .labelOriginalImage .labelReducedImage -row 2 -in .pix
 
