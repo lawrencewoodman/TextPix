@@ -74,6 +74,9 @@ proc reduce {} {
 	::TextPixConverter::displayBlocks	
 	$reducedImage copy $::TextPixConverter::workingImage
 	
+	.labelOriginalImage config -state normal
+	.labelReducedImage config -state normal
+	
 	.reduce config -state disabled
 	
 	.mbar.file entryconfigure "Save reduced image as a .PNG" -state normal
@@ -129,8 +132,8 @@ checkbutton .aceInverseMode -text "Ace inverse mode" -bd 2 -variable aceInverseM
 set originalImage [image create photo]
 set reducedImage [image create photo]
 
-label .labelOriginalImage -text "Original Image in 2 Colours"
-label .labelReducedImage -text "Reduced Image"
+label .labelOriginalImage -state disabled -text "Original Image in 2 Colours"
+label .labelReducedImage -state disabled -text "Reduced Image"
 label .originalImage -image $originalImage -text "Original 2 Colour Image"
 label .reducedImage -image $reducedImage
 
