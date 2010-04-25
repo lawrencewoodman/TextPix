@@ -18,12 +18,18 @@ Links
 *	[TextPix Repository on GitHub](http://github.com/LawrenceWoodman/TextPix)
 *	[TextPix Development Mailing List](http://www.freelists.org/list/textpix-dev)
 
+Requirements
+------------
+*	TCL/TK (Tested on 8.5)
+*	The TK package, Img, must be installed (libtk-img on Debian.  Tested on 1.3)
+*	ImageMagick (Tested on 6.3.7)
+
 Running
 -------
 To run TextPix, for the moment, go into the 'src' sub-directory and run:  
 `$ wish textpix.tcl`
 
-Load a file through the 'File->Open File To Convert' menu option then click on 'Reduce'.  This will probably take a long time at the moment.  Once it is done it will display the new image and you can click on 'Save ace.byt'.  This will create two files: charset.byt and screen.byt.
+Load a file through the 'File->Open File To Convert' menu option then click on 'Reduce'.  This will probably take a long time at the moment.  Once it is done it will display the new image and you can click on 'File->Save Jupiter Ace .byt files'.  This will create two files: charset.byt and screen.byt.
 
 If you are using a Jupiter Ace emulator such as xace, you can put these in a directory where xace can find them and then start the emulator.  Within this type the following to load the image:  
 `10240 1024 bload charset 8192 768 bload screen`
