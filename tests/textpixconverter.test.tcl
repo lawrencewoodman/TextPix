@@ -223,6 +223,8 @@ proc test_blockSixteenth {} {
 proc test_calcPlainCharSet {} {
 	puts -nonewline "test_calcPlainCharSet()  - "
 	
+	::TextPixConverter::init 32 24 128 true
+	
 	set ::TextPixConverter::workingBlocks [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {0 0 1 1} {1 0 0 1} {0 1 1 0} {0 0 1 1} {1 1 1 1}]
 	::TextPixConverter::createInitialCharSet
 	
@@ -233,7 +235,7 @@ proc test_calcPlainCharSet {} {
 		exit
 	}
 
-	if {$::TextPixConverter::plainCharSet != [list {0 0 1 1} {0 1 1 0} {1 0 0 1} {1 1 0 0} {1 1 1 1}]} {
+	if {$::TextPixConverter::plainCharSet != [list {0 0 1 1} {1 1 0 0} {0 1 1 0} {1 0 0 1} {1 1 1 1}]} {
 		puts "Failed."
 		exit	
 	}
