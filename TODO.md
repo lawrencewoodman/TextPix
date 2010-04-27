@@ -12,7 +12,6 @@ Misc
 *	Create an installer.
 *	Use threads so that a progress bar can be displayed while processing and so that the interface doesn't disappear.
 *	Improve speed of reduction.
-*	Ensure that programs doesn't have to be restarted each time a reduction is done.	
 
 Method
 ------

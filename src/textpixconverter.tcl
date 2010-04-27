@@ -95,6 +95,7 @@ namespace eval TextPixConverter {
 		variable pixelWidth [expr {$horizontalChars * 8}]
 		variable pixelHeight [expr {$verticalChars * 8}]
 		variable numBlocks [expr {$horizontalChars * $verticalChars}]
+		
 	}
 
 	proc convertToBlocks {filename} {
@@ -105,6 +106,9 @@ namespace eval TextPixConverter {
 		variable blockDiameter
 		variable originalImage
 		variable workingImage
+		
+		set originalBlocks [list]
+		set workingBlocks [list]
 
 		set originalImage [::TextPixPreprocessor::preprocess $filename $pixelWidth $pixelHeight]
 		set workingImage [image create photo]
@@ -315,6 +319,8 @@ namespace eval TextPixConverter {
 	proc createInitialCharSet {} {
 		variable workingBlocks
 		variable charSet
+		
+		set charSet [dict create]
 
 		# Create a list of the unique blocks
 		foreach char $workingBlocks {
