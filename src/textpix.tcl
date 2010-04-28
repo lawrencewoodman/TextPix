@@ -74,9 +74,9 @@ proc reduce {} {
 	::TextPixConverter::displayBlocks	
 	$reducedImage copy $::TextPixConverter::workingImage
 	
-	.labelOriginalImage config -state normal
-	.labelReducedImage config -state normal
+	grid .labelOriginalImage .labelReducedImage -row 2 -in .pix
 	
+
 	.reduce config -state disabled
 	
 	.mbar.file entryconfigure "Save reduced image as a .PNG" -state normal
@@ -110,6 +110,7 @@ menu .mbar.file
 
 frame .buttons
 frame .pix
+frame .pixLabels
 
 label .labelCharWidth -padx 3m -text "Character width:"
 label .labelCharHeight -padx 3m -text "Character height:"
@@ -132,14 +133,13 @@ checkbutton .aceInverseMode -text "Ace inverse mode" -bd 2 -variable aceInverseM
 set originalImage [image create photo]
 set reducedImage [image create photo]
 
-label .labelOriginalImage -state disabled -text "Original Image in 2 Colours"
-label .labelReducedImage -state disabled -text "Reduced Image"
-label .originalImage -image $originalImage -text "Original 2 Colour Image"
+label .labelOriginalImage -text "Original Image in 2 Colours"
+label .labelReducedImage  -text "Reduced Image"
+label .originalImage -image $originalImage 
 label .reducedImage -image $reducedImage
 
 pack .reduce .labelCharWidth .charWidth .labelCharHeight .charHeight .labelCharSetSize .charSetSize .aceInverseMode -in .buttons -side left
 grid .originalImage .reducedImage -row 1 -in .pix
-grid .labelOriginalImage .labelReducedImage -row 2 -in .pix
 
 grid .buttons -row 1
 grid .pix -row 2
