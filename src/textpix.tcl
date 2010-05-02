@@ -56,7 +56,7 @@ proc savePNGfile {} {
 	$::TextPixConverter::workingImage write textpix.png -format PNG
 }
 
-proc reduce {} {
+proc reduceOneStep {} {
 	global filename
 	global originalImage	
 	global reducedImage
@@ -64,23 +64,64 @@ proc reduce {} {
 	global charHeight
 	global charSetSize
 	global aceInverseMode
+	global stepNum
+	global reducePercentProgress
 	
-	::TextPixConverter::init $charWidth $charHeight $charSetSize $aceInverseMode
-	
-	::TextPixConverter::convertToBlocks $filename
-	$originalImage copy $::TextPixConverter::originalImage	
-	
-	::TextPixConverter::reduceCharSet
-	::TextPixConverter::displayBlocks	
-	$reducedImage copy $::TextPixConverter::workingImage
-	
-	grid .labelOriginalImage .labelReducedImage -row 2 -in .pix
-	
+	if {![info exists stepNum] || $stepNum >= 4 } {
+		set stepNum 0
+		set reducePercentProgress 0
+	}
 
-	.reduce config -state disabled
+	switch $stepNum {
+		0 	{ .reduce config -state disabled
+			
+  
+			  ::TextPixConverter::init $charWidth $charHeight $charSetSize $aceInverseMode
+			  incr stepNum
+			  set reducePercentProgress 2
+			}
+		1	{ 
+			  ::TextPixConverter::convertToBlocks $filename
+			  $originalImage copy $::TextPixConverter::originalImage
+			  $reducedImage copy $originalImage
+			  incr stepNum
+			  set reducePercentProgress 5
+			}
+		2	{ set reduceCharSetPercent [::TextPixConverter::reduceCharSet]
+			  if { $reduceCharSetPercent == 1.0} {
+				 incr stepNum
+			  }
+			  set reducePercentProgress [expr {5 + (93 * $reduceCharSetPercent) }]
+
+			}
+		3	{ ::TextPixConverter::displayBlocks	
+			  $reducedImage copy $::TextPixConverter::workingImage
 	
-	.mbar.file entryconfigure "Save reduced image as a .PNG" -state normal
-	.mbar.file entryconfigure "Save Jupiter Ace .byt files" -state normal
+			  grid .labelOriginalImage .labelReducedImage -row 2 -in .pix
+			  
+			  .mbar.file entryconfigure "Save reduced image as a .PNG" -state normal
+			  .mbar.file entryconfigure "Save Jupiter Ace .byt files" -state normal
+			  incr stepNum
+			  set reducePercentProgress 100
+			}
+	}
+	
+	
+	if {$stepNum >= 4} {
+		return 0
+	}
+	
+	return 1
+
+}
+
+
+proc reduce {} {
+	if {[reduceOneStep]} {
+		after idle [list after 0 reduce]
+	}
+	
+	return
 }
 
 
@@ -138,9 +179,14 @@ label .labelReducedImage  -text "Reduced Image"
 label .originalImage -image $originalImage 
 label .reducedImage -image $reducedImage
 
+set reducePercentProgress 0
+ttk::progressbar .reduceProgress -orient horizontal -mode determinate -variable reducePercentProgress  
+
+
+
 pack .reduce .labelCharWidth .charWidth .labelCharHeight .charHeight .labelCharSetSize .charSetSize .aceInverseMode -in .buttons -side left
 grid .originalImage .reducedImage -row 1 -in .pix
 
 grid .buttons -row 1
 grid .pix -row 2
-
+grid .reduceProgress -row 3 -sticky ew

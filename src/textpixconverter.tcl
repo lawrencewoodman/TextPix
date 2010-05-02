@@ -74,7 +74,7 @@ namespace eval TextPixConverter {
 	
 	variable horizontalChars
 	variable verticalChars
-	variable charSetSize
+	variable intendedCharSetSize
 	variable aceInverseMode
 
 	variable originalBlocks
@@ -86,15 +86,19 @@ namespace eval TextPixConverter {
 	variable charSet						;# Dictionary with the char as the key and the frequency as the value
 	variable plainCharSet					;# $charSet as a plain list without any frequency data
 	
+	variable reduceProgress
+	
 	
 	proc init {pHorizontalChars pVerticalChars pCharSetSize pAceInverseMode} {
 		variable horizontalChars $pHorizontalChars
 		variable verticalChars $pVerticalChars
-		variable charSetSize $pCharSetSize
+		variable intendedCharSetSize $pCharSetSize
 		variable aceInverseMode $pAceInverseMode
 		variable pixelWidth [expr {$horizontalChars * 8}]
 		variable pixelHeight [expr {$verticalChars * 8}]
 		variable numBlocks [expr {$horizontalChars * $verticalChars}]
+		variable reduceProgress [dict create charSetCreated false]
+		
 		
 	}
 
@@ -415,42 +419,82 @@ namespace eval TextPixConverter {
 	}
 
 
+
+
+
+	# Returns percent finished (0-1.0)
 	proc reduceCharSet {} {
 		variable workingBlocks
 		variable numBlocks
 		variable charSet
-		variable charSetSize
+		variable intendedCharSetSize
 		variable aceInverseMode
+		variable reduceProgress
 
-		createInitialCharSet
 
-		for {set charFrequency 1} {$charFrequency <= $numBlocks && [dict size $charSet] > $charSetSize} {incr charFrequency} {
-			for {set differenceCheck 0} {[dict size $charSet] > $charSetSize} {incr differenceCheck} {
-				dict for {char freq} [dict filter $charSet value $charFrequency] {
-					set copyChar [findSimilarBlock $char $differenceCheck]
-		
-					# NOTE: frequency is re-established in case it has changed in current loop
-					if {$copyChar != -1 && [dict get $charSet $char] == $charFrequency} {
-						puts "reduceNumBlocks() - found Similar Block - differenceCheck: $differenceCheck charFrequency: $charFrequency"
-						removeCharSetChar $char
-						replaceBlocks $char $copyChar
-							
-						if {[dict size $charSet] <= $charSetSize} { 
-							break
-						}
-						puts "new charSetSize: [dict size $charSet]"
-					}
-				}
-			}
-	
-			puts -nonewline "AFTER: reduce - differenceCheck: $differenceCheck unique workingBlocks: [lcountUnique $workingBlocks] "
-			puts "charSetSize: [dict size $charSet]"
+		if {![dict get $reduceProgress charSetCreated]} {
+			createInitialCharSet
+			# TODO: Note the reduceCharSetStarted above could probably moved here
+			set reduceProgress [dict create charSetCreated true charFrequency 1 differenceCheck 0]			
+			dict set reduceProgress charSetKeys [dict keys [dict filter $charSet value [dict get $reduceProgress charFrequency]]]
+			dict set reduceProgress charSetKeyLength [llength [dict get $reduceProgress charSetKeys]]
+			dict set reduceProgress charSetIndex 0
+
+			
 		}
+
+		set charFrequency [dict get $reduceProgress charFrequency]
+		set differenceCheck [dict get $reduceProgress differenceCheck]		
 		
-		if {$aceInverseMode} {
-			aceInverseAdjust
+		set char [lindex [dict get $reduceProgress charSetKeys] [dict get $reduceProgress charSetIndex]]
+		set copyChar [findSimilarBlock $char $differenceCheck]
+		
+		# NOTE: frequency is re-established in case it has changed in current loop
+		if {$copyChar != -1 && [dict get $charSet $char] == $charFrequency} {
+			puts -nonewline "reduceNumBlocks() - found Similar Block - differenceCheck: $differenceCheck charFrequency: $charFrequency"
+			puts "charSetSize: [dict size $charSet]"
+			removeCharSetChar $char
+			replaceBlocks $char $copyChar
+							
+		}
+
+		
+		# If the charSet still needs to be reduced further
+		if {[dict size $charSet] > $intendedCharSetSize} {
+			if {[dict get $reduceProgress charSetIndex] < [expr {[dict get $reduceProgress charSetKeyLength] - 1}]} {
+				dict incr reduceProgress charSetIndex	
+			} else {
+			
+				dict set reduceProgress charSetKeys [dict keys [dict filter $charSet value [dict get $reduceProgress charFrequency]]]
+				dict set reduceProgress charSetKeyLength [llength [dict get $reduceProgress charSetKeys]]				
+				dict set reduceProgress charSetIndex 0
+			
+				dict incr reduceProgress differenceCheck				
+
+				# TODO: Should check for differenceCheck out of bounds here
+			
+				
+			}
+		} else {	# Else, the charSet is down to the intended size
+			if {$aceInverseMode} {
+				aceInverseAdjust
+			}
+			
 		}	
+
+		# TODO: Is this needed as charFrequency never seems to get above 1
+#		dict incr reduceProgress charFrequency
+#		if {$charFrequency > $numBlocks || [dict size $charSet] <= $indendedCharSetSize} {
+#			return 0
+#		} else {
+#			dict set reduceProgress charSetKeys [dict keys [dict filter $charSet value $charFrequency]]
+#			dict  charSetIndex 0
+#}
+
+		
+		return [expr {($intendedCharSetSize*1.0) / [dict size $charSet]}] 
 	}
+	
 	
 	
 	proc getInverseChar {char} {
